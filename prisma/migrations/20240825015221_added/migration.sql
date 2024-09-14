@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Project" ALTER COLUMN "selecterId" DROP NOT NULL,
+ALTER COLUMN "selecterId" DROP DEFAULT;

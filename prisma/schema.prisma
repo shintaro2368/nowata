@@ -1,0 +1,187 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String          @id @default(cuid())
+  name          String?
+  email         String          @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  // Optional for WebAuthn support
+  role          String?
+  Authenticator Authenticator[]
+
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  createdProject Project[]     @relation("CreatedProjects")
+  activeProject  Project?      @relation("ActiveProject")
+  DailyReport    DailyReport[]
+  Setting        Setting?
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+// Optional for WebAuthn support
+model Authenticator {
+  credentialID         String  @unique
+  userId               String
+  providerAccountId    String
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, credentialID])
+}
+
+// setting model
+model Setting {
+  id                     String    @id @default(cuid())
+  standardStartWorkTime  DateTime?
+  standardEndWorkTime    DateTime?
+  standardBreakTime      Decimal?
+  defaultWorkDescription String?
+  minimumWorkTime        Decimal?
+  standardWorkTime       Decimal?
+  maximumWorkTime        Decimal?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  userId       String @unique
+  workTypeCode String
+
+  workType WorkType @relation(fields: [workTypeCode], references: [code], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// project model
+model Project {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  userId        String
+  selecterId    String?  @unique
+  createdBy     User     @relation("CreatedProjects", fields: [userId], references: [id], onDelete: Cascade)
+  activeProject User?    @relation("ActiveProject", fields: [selecterId], references: [id], onDelete: Cascade)
+  Task          Task[]
+}
+
+// task model
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  projectId   String
+  statusCode  String
+
+  status  Status  @relation(fields: [statusCode], references: [code], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  Work    Work[]
+}
+
+// work model
+model Work {
+  id          String    @id @default(cuid())
+  description String?
+  startAt     DateTime
+  endAt       DateTime?
+  totalTime   Decimal?
+  taskId      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  task        Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+// status model
+model Status {
+  code      String   @id
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Task      Task[]
+}
+
+// work type model
+model WorkType {
+  code        String        @id
+  name        String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  DailyReport DailyReport[]
+  Setting     Setting[]
+}
+
+// daily report model
+model DailyReport {
+  id           String    @id @default(cuid())
+  date         DateTime
+  description  String?
+  startAt      DateTime
+  endAt        DateTime?
+  breakTime    Decimal
+  workTypeCode String
+  userId       String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  workType WorkType @relation(fields: [workTypeCode], references: [code], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

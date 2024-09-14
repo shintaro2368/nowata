@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "DailyReport" ALTER COLUMN "endAt" DROP NOT NULL,
+ALTER COLUMN "breakTime" DROP NOT NULL;
