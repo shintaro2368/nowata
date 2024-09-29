@@ -1,6 +1,6 @@
 "use client";
 
-import { PieChart, pieArcLabelClasses } from "@mui/x-charts/PieChart";
+import { PieChart } from "@mui/x-charts/PieChart";
 
 // const data = [
 //   { value: 1, label: '完了済', color: '#3182ce' },

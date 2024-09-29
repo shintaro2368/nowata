@@ -1,64 +1,110 @@
 "use client";
 
-import { useState } from "react";
 import { createTask } from "@/actions/task-action";
-
-import CustomInput from "./custom-input";
-import CustomTextarea from "./custom-textarea";
 import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
-import DoubleArrowIcon from "@mui/icons-material/DoubleArrow";
 import DoneIcon from "@mui/icons-material/Done";
+import DoubleArrowIcon from "@mui/icons-material/DoubleArrow";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
+import { TaskStatus } from "@prisma/client";
+import { useState } from "react";
+import { useFormState } from "react-dom";
 
-const icons = {
-  "0": <AppRegistrationIcon fontSize="large" color="primary" />,
-  "1": <DoubleArrowIcon fontSize="large" color="warning" />,
-  "2": <DoneIcon fontSize="large" color="action" />,
+type statusIconProps = {
+  status: TaskStatus;
+  icon: JSX.Element;
 };
 
-export default function TaskForm({
-  statuses,
-}: {
-  statuses: { code: string; name: string }[];
-}) {
-  const [selectedStatus, setSelectedStatus] = useState<string>("0");
+const icons: statusIconProps[] = [
+  {
+    status: "TODO",
+    icon: <AppRegistrationIcon fontSize="large" color="primary" />,
+  },
+  {
+    status: "DOING",
+    icon: <DoubleArrowIcon fontSize="large" color="warning" />,
+  },
+  { status: "DONE", icon: <DoneIcon fontSize="large" color="action" /> },
+];
 
+export type TaskFormProp = {
+  id: string | undefined;
+  title: string | undefined;
+  description: string | undefined;
+  status: TaskStatus | undefined;
+};
+
+export default function TaskForm(task: TaskFormProp) {
+  const [selectedStatus, setSelectedStatus] = useState<TaskStatus>(
+    task.status ? task.status : "TODO"
+  );
+  const [formState, dispatch] = useFormState(createTask, null);
+  const error = formState?.error;
   return (
     <div>
-      <form action={createTask} className="flex flex-col gap-4">
-        <CustomInput name="title" label="Title" placeholder="Title" />
-        <CustomTextarea
-          name="description"
-          label="Description"
-          placeholder="Description"
-        />
-        <div className="flex flex-row gap-2">
-          {statuses.map((status) => (
-            <div
-              key={status.code}
-              className={`basis-1/3 p-2 border rounded-md ${
-                selectedStatus === status.code
-                  ? "bg-gray-300 border-gray-600"
-                  : "hover:bg-gray-100"
-              } cursor-pointer flex flex-col justify-center items-center`}
-              onClick={() => setSelectedStatus(status.code)}
-            >
-              {icons[status.code as keyof typeof icons]}
-              <p className="text-center text-sm text-gray-600 mt-2">
-                {status.name}
-              </p>
-            </div>
-          ))}
-          <input type="text" hidden name="status" value={selectedStatus} />
-        </div>
-        <div className="mt-8">
-          <button
-            className="inline-block bg-blue-500 text-white p-2 rounded-md w-full mt-4"
-            type="submit"
-          >
-            登録
-          </button>
-        </div>
-      </form>
+      {formState?.message && (
+        <p className="text-red-500 mb-2">{formState.message}</p>
+      )}
+      <Box component="form" action={dispatch} mt={2}>
+        <Stack spacing={3}>
+          <TextField
+            name="title"
+            label="タイトル"
+            required
+            error={!!error?.["title"]?.message}
+            helperText={
+              error?.["title"]?.message && (
+                <span className="text-red-500">
+                  {error?.["title"]?.message}
+                </span>
+              )
+            }
+          />
+          {/* {error?.["title"]?.message && (
+          <span className="text-red-500">{error?.["title"]?.message}</span>
+        )} */}
+          <TextField
+            error={!!error?.["description"]?.message}
+            name="description"
+            label="内容"
+            multiline
+            rows={5}
+            helperText={
+              error?.["description"]?.message && (
+                <span className="text-red-500">
+                  {error?.["description"]?.message}
+                </span>
+              )
+            }
+          />
+          <Stack direction="row" spacing={2}>
+            {icons.map((entry) => (
+              <Button
+                color="inherit"
+                fullWidth
+                variant={
+                  selectedStatus === entry.status ? "contained" : "outlined"
+                }
+                key={entry.status}
+                onClick={() => setSelectedStatus(entry.status)}
+              >
+                <Stack spacing={1} alignItems="center" padding={2}>
+                  {entry.icon}
+                  <span>{entry.status}</span>
+                </Stack>
+              </Button>
+            ))}
+            <input type="text" hidden name="status" value={selectedStatus} />
+          </Stack>
+          <div className="mt-8">
+            <Button type="submit" variant="contained" fullWidth>
+              登録
+            </Button>
+          </div>
+        </Stack>
+      </Box>
     </div>
   );
 }

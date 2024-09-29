@@ -1,0 +1,11 @@
+services:
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_PASSWORD: 1111
+    ports:
+      - 6500:5432
+    volumes:
+      - db-data:/var/lib/postgresql/data
+volumes:
+  db-data:

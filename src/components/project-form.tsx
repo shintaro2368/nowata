@@ -1,13 +1,18 @@
 "use client";
 
+import { createProject, updateSelectProject } from "@/actions/project-action";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
-import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
-import { updateSelectProject } from "@/actions/project-action";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
+import { useState } from "react";
+import { useFormState } from "react-dom";
 
 export default function ProjectForm({
   projects,
@@ -18,15 +23,15 @@ export default function ProjectForm({
     projects.find((project) => project.checked)
   );
   const [open, setOpen] = useState(false);
-  const router = useRouter();
+  const [openCreateProejct, setOpenCreateProject] = useState(false);
+  const [formState, dispatch] = useFormState(createProject, null);
 
   const handleClose = () => {
     setOpen(false);
   };
 
-  const handleRouteProjects = () => {
-    handleClose();
-    router.push("/projects");
+  const handleCloseCreateProject = () => {
+    setOpenCreateProject(false);
   };
 
   const handleSelectProject = (projectId: string) => {
@@ -35,7 +40,6 @@ export default function ProjectForm({
 
   const handleSubmit = async () => {
     await updateSelectProject(selectedProject?.id ?? "");
-    handleClose();
   };
 
   return (
@@ -52,14 +56,13 @@ export default function ProjectForm({
       <Dialog open={open} onClose={handleClose} fullWidth>
         <DialogTitle>プロジェクトを選択</DialogTitle>
         <DialogContent>
-          {projects.length > 0 ? (
-            <div>
-              <div
-                className="text-sm font-medium text-blue-600 text-right cursor-pointer"
-                onClick={handleRouteProjects}
-              >
+          <div>
+            <div className="flex justify-end">
+              <Button onClick={() => setOpenCreateProject(true)}>
                 新しいプロジェクトを作成
-              </div>
+              </Button>
+            </div>
+            {projects.length > 0 ? (
               <ul className="mt-4">
                 {projects.map((project) => (
                   <li key={project.id}>
@@ -75,15 +78,74 @@ export default function ProjectForm({
                   </li>
                 ))}
               </ul>
-            </div>
-          ) : (
-            <p>プロジェクトがありません</p>
-          )}
+            ) : (
+              <p>プロジェクトがありません</p>
+            )}
+          </div>
         </DialogContent>
         <DialogActions>
-          <button onClick={handleSubmit}>選択</button>
-          <button onClick={handleClose}>閉じる</button>
+          <Button
+            variant="contained"
+            onClick={handleSubmit}
+            disabled={!selectedProject?.id}
+          >
+            選択
+          </Button>
+          <Button
+            variant="contained"
+            color="success"
+            disabled={!selectedProject?.id}
+          >
+            編集
+          </Button>
+          <Button variant="outlined" onClick={handleClose}>
+            閉じる
+          </Button>
         </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={openCreateProejct}
+        onClose={handleCloseCreateProject}
+        fullWidth
+      >
+        <DialogTitle>プロジェクトの作成</DialogTitle>
+        <Box component="form" action={dispatch}>
+          <DialogContent>
+            <Stack spacing={3}>
+              {formState?.message && (
+                <Alert severity="error">{formState.message}</Alert>
+              )}
+              <TextField
+                name="title"
+                required
+                label="タイトル"
+                error={!!formState?.error?.["title"]}
+                helperText={formState?.error?.["title"]?.message}
+              />
+              <TextField
+                name="description"
+                multiline
+                rows={5}
+                label="概要"
+                error={!!formState?.error?.["description"]}
+                helperText={formState?.error?.["description"]?.message}
+              />
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              variant="contained"
+              type="submit"
+              onClick={handleCloseCreateProject}
+            >
+              作成
+            </Button>
+            <Button variant="outlined" onClick={handleCloseCreateProject}>
+              閉じる
+            </Button>
+          </DialogActions>
+        </Box>
       </Dialog>
     </>
   );

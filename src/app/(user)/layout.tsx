@@ -36,7 +36,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <div className="flex flex-col w-72 bg-blue-200">
+      <div className="flex flex-col w-[300px] bg-blue-200">
         <div className="grow">
           <Link href="/dashboard">
             <h2 className="text-2xl font-medium text-center p-6 mb-4">

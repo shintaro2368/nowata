@@ -122,19 +122,24 @@ model Project {
   Task          Task[]
 }
 
+enum TaskStatus {
+  TODO
+  DOING
+  DONE
+}
+
 // task model
 model Task {
-  id          String   @id @default(cuid())
+  id          String     @id @default(cuid())
   title       String
   description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
   projectId   String
-  statusCode  String
-
-  status  Status  @relation(fields: [statusCode], references: [code], onDelete: Cascade)
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  Work    Work[]
+  status      TaskStatus @default(TODO)
+  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  Work        Work[]
+  cardBgColor String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
 
 // work model
@@ -148,15 +153,6 @@ model Work {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   task        Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
-}
-
-// status model
-model Status {
-  code      String   @id
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  Task      Task[]
 }
 
 // work type model

@@ -16,6 +16,7 @@ export default function CustomInput({
         name={name}
         placeholder={placeholder}
         className="w-full border border-gray-300 rounded-md px-2 py-1"
+        required
       />
     </div>
   );

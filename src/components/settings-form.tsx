@@ -2,7 +2,7 @@
 
 import DatePickerProvider from "./date-picker-provider";
 import { DatePicker, renderTimeViewClock } from "@mui/x-date-pickers";
-import { TimePicker } from "@mui/x-date-pickers";
+import { TimePicker, StaticTimePicker } from "@mui/x-date-pickers";
 import moment from "moment";
 import { useState } from "react";
 import { createSetting } from "@/actions/setting-action";
