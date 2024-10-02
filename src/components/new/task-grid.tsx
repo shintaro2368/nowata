@@ -1,3 +1,4 @@
+import TaskAndWorks from "@/types/task-and-works";
 import Container from "@mui/material/Container";
 import Grid from "@mui/material/Grid";
 import { Task } from "@prisma/client";
@@ -10,7 +11,7 @@ export default function TaskGrid({
   isOpenForm,
   handleSetEditTask,
 }: {
-  tasks: Task[];
+  tasks: TaskAndWorks[];
   handleOpenForm: () => void;
   isOpenForm: boolean;
   handleSetEditTask: (task: Task) => void;

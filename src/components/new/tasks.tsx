@@ -1,12 +1,13 @@
 "use client";
 
 import Box from "@mui/material/Box";
-import { Task } from "@prisma/client";
+import { Task, Work } from "@prisma/client";
 import { useState } from "react";
 import TaskForm from "./task-form";
 import TaskGrid from "./task-grid";
+import TaskAndWorks from "@/types/task-and-works";
 
-export default function Tasks({ tasks }: { tasks: Task[] }) {
+export default function Tasks({ tasks }: { tasks: TaskAndWorks []}) {
   const [editTask, setEditTask] = useState<Task | null>(null);
   const [displayForm, setDisplayForm] = useState(false);
 

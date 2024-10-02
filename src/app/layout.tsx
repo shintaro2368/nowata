@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
+import type { Metadata } from "next";
+import { Zen_Maru_Gothic } from "next/font/google";
 
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Zen_Maru_Gothic({ weight: "400", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Nowata",

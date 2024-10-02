@@ -13,6 +13,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  User
+  Admin
+}
+
 model User {
   id            String          @id @default(cuid())
   name          String?
@@ -22,7 +27,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   // Optional for WebAuthn support
-  role          String?
+  role          Role            @default(User)
   Authenticator Authenticator[]
 
   createdAt      DateTime      @default(now())
@@ -30,7 +35,6 @@ model User {
   createdProject Project[]     @relation("CreatedProjects")
   activeProject  Project?      @relation("ActiveProject")
   DailyReport    DailyReport[]
-  Setting        Setting?
 }
 
 model Account {
@@ -100,12 +104,9 @@ model Setting {
   maximumWorkTime        Decimal?
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
+  projectId              String    @unique
 
-  userId       String @unique
-  workTypeCode String
-
-  workType WorkType @relation(fields: [workTypeCode], references: [code], onDelete: Cascade)
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 // project model
@@ -120,6 +121,7 @@ model Project {
   createdBy     User     @relation("CreatedProjects", fields: [userId], references: [id], onDelete: Cascade)
   activeProject User?    @relation("ActiveProject", fields: [selecterId], references: [id], onDelete: Cascade)
   Task          Task[]
+  Setting       Setting?
 }
 
 enum TaskStatus {
@@ -155,29 +157,24 @@ model Work {
   task        Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
 }
 
-// work type model
-model WorkType {
-  code        String        @id
-  name        String
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  DailyReport DailyReport[]
-  Setting     Setting[]
+enum WorkStyle {
+  AtCompany
+  AtHome
+  Absent
+  DayOff
 }
 
 // daily report model
 model DailyReport {
-  id           String    @id @default(cuid())
-  date         DateTime
-  description  String?
-  startAt      DateTime
-  endAt        DateTime?
-  breakTime    Decimal
-  workTypeCode String
-  userId       String
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-
-  workType WorkType @relation(fields: [workTypeCode], references: [code], onDelete: Cascade)
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String    @id @default(cuid())
+  date        DateTime
+  description String?
+  startAt     DateTime
+  endAt       DateTime?
+  breakTime   Decimal
+  userId      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  workStyle   WorkStyle
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

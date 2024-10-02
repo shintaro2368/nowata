@@ -1,8 +1,16 @@
 "use server";
 
-import prisma from "@/db";
 import { auth } from "@/auth";
+import prisma from "@/db";
+import { TaskStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+
+export type WorkSearchProp = {
+  taskTitle: string | undefined;
+  from: Date | undefined;
+  to: Date | undefined;
+  status: TaskStatus[] | undefined;
+};
 
 export async function startWork(taskId: string) {
   const session = await auth();
@@ -63,4 +71,34 @@ export async function stopWork(taskId: string) {
   });
 
   revalidatePath("/tasks");
+}
+
+export async function searchWork(param: WorkSearchProp) {
+  const { taskTitle, status, from, to } = param;
+
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  if (!userId) {
+    throw new Error("");
+  }
+
+  const tasks = prisma.task.findMany({
+    where: {
+      title: {
+        contains: taskTitle ? taskTitle : undefined,
+      },
+      project: {
+        selecterId: userId,
+      },
+    },
+    include: {
+      Work: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  return tasks;
 }

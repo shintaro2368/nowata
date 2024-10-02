@@ -5,19 +5,28 @@ import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import CheckBox from "@mui/material/Checkbox";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
+import Divider from "@mui/material/Divider";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { useFormState } from "react-dom";
 
 export default function ProjectForm({
   projects,
 }: {
-  projects: { id: string; checked: boolean; name: string }[];
+  projects: {
+    id: string;
+    checked: boolean;
+    name: string;
+    description: string | null;
+  }[];
 }) {
   const [selectedProject, setSelectedProject] = useState(
     projects.find((project) => project.checked)
@@ -63,21 +72,26 @@ export default function ProjectForm({
               </Button>
             </div>
             {projects.length > 0 ? (
-              <ul className="mt-4">
+              <Stack>
                 {projects.map((project) => (
-                  <li key={project.id}>
-                    <input
-                      className="mr-2 cursor-pointer"
-                      type="checkbox"
-                      name="checked"
-                      id="checked"
-                      checked={project.id === selectedProject?.id}
-                      onChange={() => handleSelectProject(project.id)}
+                  <Box component="div" key={project.id}>
+                    <FormControlLabel
+                      label={project.name}
+                      control={
+                        <CheckBox
+                          name="checked"
+                          checked={project.id === selectedProject?.id}
+                          onChange={() => handleSelectProject(project.id)}
+                        />
+                      }
                     />
-                    {project.name}
-                  </li>
+                    <Typography variant="body2" marginLeft={4} marginBottom={2}>
+                      {project.description}
+                    </Typography>
+                    <Divider/>
+                  </Box>
                 ))}
-              </ul>
+              </Stack>
             ) : (
               <p>プロジェクトがありません</p>
             )}
@@ -90,13 +104,6 @@ export default function ProjectForm({
             disabled={!selectedProject?.id}
           >
             選択
-          </Button>
-          <Button
-            variant="contained"
-            color="success"
-            disabled={!selectedProject?.id}
-          >
-            編集
           </Button>
           <Button variant="outlined" onClick={handleClose}>
             閉じる

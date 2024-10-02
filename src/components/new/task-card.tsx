@@ -1,4 +1,6 @@
 import { deleteTask, updateCardBgColor } from "@/actions/task-action";
+import { startWork, stopWork } from "@/actions/work-action";
+import TaskAndWorks from "@/types/task-and-works";
 import ColorLensIcon from "@mui/icons-material/ColorLens";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -8,17 +10,16 @@ import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import { Task } from "@prisma/client";
 import { useState } from "react";
 import { SketchPicker } from "react-color";
 import ConfirmDeleteItem from "../confirm-delete-item";
-
-import { Task } from "@prisma/client";
 
 export default function TaskCard({
   task,
   onClick,
 }: {
-  task: Task;
+  task: TaskAndWorks;
   onClick: (task: Task) => void;
 }) {
   const [displayColorPicker, setDisplayColorPicker] = useState(false);
@@ -74,9 +75,24 @@ export default function TaskCard({
               <ColorLensIcon />
             </Box>
             <Stack direction="row" spacing={1}>
-              <Button variant="outlined" title="このタスクの作業を開始します">
-                開始
-              </Button>
+              {task.Work.length === 0 ? (
+                <Button
+                  variant="outlined"
+                  title="このタスクの作業を開始します"
+                  onClick={async () => await startWork(task.id)}
+                >
+                  開始
+                </Button>
+              ) : (
+                <Button
+                  color="warning"
+                  variant="contained"
+                  title="このタスクの作業を終了します"
+                  onClick={async () => await stopWork(task.id)}
+                >
+                  終了
+                </Button>
+              )}
               <Button
                 variant="outlined"
                 color="error"

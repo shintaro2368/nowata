@@ -89,6 +89,7 @@ export default async function DashboardLayout({
               id: project.id,
               checked: project.id === activeProject?.id,
               name: project.title,
+              description: project.description,
             }))}
           />
         </div>

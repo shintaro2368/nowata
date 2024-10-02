@@ -1,7 +1,7 @@
 "use server";
 
-import prisma from "@/db";
 import { auth } from "@/auth";
+import prisma from "@/db";
 import { revalidatePath } from "next/cache";
 
 export async function startWork() {
@@ -26,16 +26,18 @@ export async function startWork() {
     );
   }
 
-  const setting = await prisma.setting.findUnique({
+  const setting = await prisma.setting.findFirst({
     where: {
-      userId,
-    },
-  });
-
+      project: {
+        selecterId: userId,
+      }
+    }
+  })
+  
   await prisma.dailyReport.create({
     data: {
       date: new Date(),
-      workTypeCode: setting?.workTypeCode ?? "0",
+      workStyle: "AtCompany",
       startAt: new Date(),
       userId,
       breakTime: 1,

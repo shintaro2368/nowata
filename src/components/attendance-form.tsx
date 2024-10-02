@@ -1,10 +1,11 @@
 "use client";
 import { startWork, endWork } from "@/actions/daily-report-action";
-
+import Box from "@mui/material/Box"
+import Button from "@mui/material/Button"
 import Snackbar, { SnackbarOrigin } from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 
 export default function AttendanceForm({ isWorking }: { isWorking: boolean }) {
   const [state, setState] = useState<{
@@ -31,8 +32,8 @@ export default function AttendanceForm({ isWorking }: { isWorking: boolean }) {
     });
   };
   return (
-    <>
-      <div>
+    <Fragment>
+      <Box>
         {isWorking ? (
           <form action={endWork}>
             <button
@@ -54,7 +55,7 @@ export default function AttendanceForm({ isWorking }: { isWorking: boolean }) {
             </button>
           </form>
         )}
-      </div>
+      </Box>
       <div>
         <Snackbar
           open={state.open}
@@ -67,6 +68,6 @@ export default function AttendanceForm({ isWorking }: { isWorking: boolean }) {
           </Alert>
         </Snackbar>
       </div>
-    </>
+    </Fragment>
   );
 }
