@@ -3,14 +3,14 @@
 import DatePickerProvider from "./date-picker-provider";
 import { DatePicker, renderTimeViewClock } from "@mui/x-date-pickers";
 import { TimePicker, StaticTimePicker } from "@mui/x-date-pickers";
-import moment from "moment";
+import dayjs from "dayjs"
 import { useState } from "react";
 import { createSetting } from "@/actions/setting-action";
 
 export default function SettingsForm() {
-  const [start, setStart] = useState<moment.Moment | null>(null);
-  const [end, setEnd] = useState<moment.Moment | null>(null);
-  const [breakTime, setBreakTime] = useState<moment.Moment | null>(null);
+  const [start, setStart] = useState<dayjs.Dayjs | null>(null);
+  const [end, setEnd] = useState<dayjs.Dayjs | null>(null);
+  const [breakTime, setBreakTime] = useState<dayjs.Dayjs | null>(null);
 
   return (
     <DatePickerProvider>

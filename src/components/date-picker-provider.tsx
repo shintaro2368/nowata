@@ -1,6 +1,6 @@
 import { LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
-import "moment/locale/ja";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import "dayjs/locale/ja";
 
 export default function DatePickerProvider({
   children,
@@ -8,7 +8,7 @@ export default function DatePickerProvider({
   children: React.ReactNode;
 }) {
   return (
-    <LocalizationProvider dateAdapter={AdapterMoment} adapterLocale="ja">
+    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ja">
       {children}
     </LocalizationProvider>
   );
