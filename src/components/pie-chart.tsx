@@ -14,7 +14,7 @@ import { PieChart } from "@mui/x-charts/PieChart";
 
 const size = {
   width: 300,
-  height: 300,
+  height: 500,
   legend: {
     hidden: true,
   },

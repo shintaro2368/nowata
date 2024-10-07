@@ -1,9 +1,12 @@
 import { auth } from "@/auth";
-import prisma from "@/db";
-import { redirect } from "next/navigation";
-import AttendanceForm from "@/components/attendance-form";
-import CustomPieChart from "@/components/pie-chart";
 import LineCharts from "@/components/line-charts";
+import CustomPieChart from "@/components/pie-chart";
+import prisma from "@/db";
+import Box from "@mui/material/Box";
+import grey from "@mui/material/colors/grey";
+import Grid from "@mui/material/Grid";
+import Typography from "@mui/material/Typography";
+import { redirect } from "next/navigation";
 
 export default async function DashbordPage() {
   const session = await auth();
@@ -39,6 +42,11 @@ export default async function DashbordPage() {
     where: { projectId: project?.id, status: "TODO" },
   });
 
+  const reports = await prisma.dailyReport.findMany({
+    where: { userId },
+    orderBy: { date: "asc" },
+  });
+
   const getProgressCircleData = () => {
     const data = [
       { value: doneTaskSize, label: "完了", color: "#3182ce" },
@@ -54,45 +62,132 @@ export default async function DashbordPage() {
   };
 
   return (
-    <div>
-      <h1 className="text-xl font-medium">ダッシュボード</h1>
-      <div className="flex items-center">
-        <div className="p-12">
-          <div className="flex items-center">
-            <p className="text-8xl font-bold text-blue-600">
-              {taskSize === 0
-                ? 0
-                : Math.floor((doneTaskSize / taskSize) * 100)}
-              %
-            </p>
-            <div className="flex flex-col">
-              <p>達成 {doneTaskSize}</p>
-              <p>登録 {taskSize}</p>
-            </div>
-          </div>
-          <p className="text-gray-700 text-sm py-2">達成率</p>
-        </div>
-        <div className="p-12">
-          <p className="text-6xl font-bold text-blue-600">{doingTaskSize}</p>
-          <p className="text-gray-700 text-sm py-2">作業中のタスク</p>
-        </div>
-        <div className="p-12">
-          <p className="text-6xl font-bold text-blue-600">22.5h</p>
-          <p className="text-gray-700 text-sm py-2">今月の作業時間</p>
-        </div>
-
-        <div className="">
-          <AttendanceForm isWorking={!!runningDailyReport} />
-        </div>
-      </div>
-      <div className="flex">
-        <div className="border-2 border-blue-800 rounded-md shadow-md p4 m-2">
+    <Grid container maxWidth={1200} spacing={3} rowSpacing={2} height="100%">
+      <Grid item xs={6} height="15%">
+        <Box
+          bgcolor="#fff"
+          borderRadius={4}
+          width="100%"
+          height="100%"
+          borderColor={grey[200]}
+          sx={{ borderWidth: 3 }}
+          padding={3}
+        >
+          <Typography
+            variant="h4"
+            fontSize="1.3em"
+            color={grey[700]}
+            marginBottom={2}
+          >
+            達成率
+          </Typography>
+          <Typography variant="h2" fontWeight={500}>
+            {doneTaskSize}
+          </Typography>
+        </Box>
+      </Grid>
+      <Grid item xs={6} height="15%">
+        <Box
+          bgcolor="#fff"
+          borderRadius={4}
+          width="100%"
+          height="100%"
+          borderColor={grey[200]}
+          sx={{ borderWidth: 3 }}
+          padding={3}
+        >
+          <Typography
+            variant="h4"
+            fontSize="1.3em"
+            color={grey[700]}
+            marginBottom={2}
+          >
+            今月の稼働時間
+          </Typography>
+          <Typography variant="h2" fontWeight={500}>
+            {121}H
+          </Typography>
+        </Box>
+      </Grid>
+      <Grid item xs={4} height="15%">
+        <Box
+          bgcolor="#fff"
+          borderRadius={4}
+          width="100%"
+          height="100%"
+          borderColor={grey[200]}
+          sx={{ borderWidth: 3 }}
+          padding={3}
+        >
+          <Typography
+            variant="h4"
+            fontSize="1.3em"
+            color={grey[700]}
+            marginBottom={2}
+          >
+            TODO
+          </Typography>
+          <Typography variant="h2" fontWeight={500}>
+            {todoTask}
+          </Typography>
+        </Box>
+      </Grid>
+      <Grid item xs={4} height="15%">
+        <Box
+          bgcolor="#fff"
+          borderRadius={4}
+          width="100%"
+          height="100%"
+          borderColor={grey[200]}
+          sx={{ borderWidth: 3 }}
+          padding={3}
+        >
+          <Typography
+            variant="h4"
+            fontSize="1.3em"
+            color={grey[700]}
+            marginBottom={2}
+          >
+            DOING
+          </Typography>
+          <Typography variant="h2" fontWeight={500}>
+            {doingTaskSize}
+          </Typography>
+        </Box>
+      </Grid>
+      <Grid item xs={4} height="15%">
+        <Box
+          bgcolor="#fff"
+          borderRadius={4}
+          width="100%"
+          height="100%"
+          borderColor={grey[200]}
+          sx={{ borderWidth: 3 }}
+          padding={3}
+        >
+          <Typography
+            variant="h4"
+            fontSize="1.3em"
+            color={grey[700]}
+            marginBottom={2}
+          >
+            DONE
+          </Typography>
+          <Typography variant="h2" fontWeight={500}>
+            {doneTaskSize}
+          </Typography>
+        </Box>
+      </Grid>
+      <Grid item xs={12} height="30%">
+        <Box height="100%" bgcolor={grey[100]}>
+          <LineCharts reports={reports} />
+        </Box>
+      </Grid>
+      <Grid item xs={4}>
+        <Box>
           <CustomPieChart {...getProgressCircleData()} />
-        </div>
-        <div className="border-2 border-blue-800 rounded-md shadow-md p4 m-2">
-          <LineCharts />
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Grid>
+    </Grid>
   );
 }

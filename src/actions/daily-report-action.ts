@@ -3,6 +3,7 @@
 import { auth } from "@/auth";
 import prisma from "@/db";
 import { revalidatePath } from "next/cache";
+import dayjs from "dayjs";
 
 export async function startWork() {
   const session = await auth();
@@ -33,12 +34,12 @@ export async function startWork() {
       }
     }
   })
-  
+  const now = dayjs().add(9, "hour");
   await prisma.dailyReport.create({
     data: {
-      date: new Date(),
+      date: new Date(now.toDate().setHours(0,0,0,0)),
       workStyle: "AtCompany",
-      startAt: new Date(),
+      startAt: now.toDate(),
       userId,
       breakTime: 1,
     },
@@ -76,7 +77,7 @@ export async function endWork() {
       id: latestWork.id,
     },
     data: {
-      endAt: new Date(),
+      endAt: dayjs().add(9, "hour").toDate(),
     },
   });
 

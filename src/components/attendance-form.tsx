@@ -1,9 +1,9 @@
 "use client";
-import { startWork, endWork } from "@/actions/daily-report-action";
-import Box from "@mui/material/Box"
-import Button from "@mui/material/Button"
-import Snackbar, { SnackbarOrigin } from "@mui/material/Snackbar";
+import { endWork, startWork } from "@/actions/daily-report-action";
 import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Snackbar from "@mui/material/Snackbar";
 
 import { Fragment, useState } from "react";
 
@@ -36,38 +36,39 @@ export default function AttendanceForm({ isWorking }: { isWorking: boolean }) {
       <Box>
         {isWorking ? (
           <form action={endWork}>
-            <button
+            <Button
               type="submit"
-              className="bg-red-500 text-white text-2xl px-8 py-4 rounded-md hover:bg-red-600"
+              variant="contained"
+              color="success"
               onClick={handleOnClick}
             >
               退勤
-            </button>
+            </Button>
           </form>
         ) : (
           <form action={startWork}>
-            <button
+            <Button
+              variant="contained"
               type="submit"
-              className="bg-green-500 text-white text-2xl px-8 py-4 rounded-md hover:bg-green-600"
+              color="primary"
               onClick={handleOnClick}
             >
               出勤
-            </button>
+            </Button>
           </form>
         )}
       </Box>
-      <div>
-        <Snackbar
-          open={state.open}
-          autoHideDuration={4000}
-          anchorOrigin={{ vertical: "top", horizontal: "right" }}
-          onClose={handleClose}
-        >
-          <Alert severity="success" color="info">
-            {state.message}
-          </Alert>
-        </Snackbar>
-      </div>
+
+      <Snackbar
+        open={state.open}
+        autoHideDuration={3000}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        onClose={handleClose}
+      >
+        <Alert severity="success" color="info">
+          {state.message}
+        </Alert>
+      </Snackbar>
     </Fragment>
   );
 }

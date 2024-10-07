@@ -15,7 +15,7 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { useState } from "react";
+import { Fragment,useState } from "react";
 import { useFormState } from "react-dom";
 
 export default function ProjectForm({
@@ -52,15 +52,15 @@ export default function ProjectForm({
   };
 
   return (
-    <>
+    <Fragment>
       <div
         className="rounded-sm px-1 my-1 mx-2 w-fit cursor-pointer"
         onClick={() => setOpen(true)}
       >
-        <h3>
-          {projects.find((project) => project.checked)?.name ?? "No Project"}
-          <ArrowDropDownIcon fontSize="medium" />
-        </h3>
+        <Button endIcon={<ArrowDropDownIcon fontSize="large"/>} color="inherit" sx={{fontSize: "1.1em"}}>
+          {projects.find((project) => project.checked)?.name ?? "プロジェクトを作成してください"}
+          {/* <ArrowDropDownIcon fontSize="medium" /> */}
+        </Button>
       </div>
       <Dialog open={open} onClose={handleClose} fullWidth>
         <DialogTitle>プロジェクトを選択</DialogTitle>
@@ -154,6 +154,6 @@ export default function ProjectForm({
           </DialogActions>
         </Box>
       </Dialog>
-    </>
+    </Fragment>
   );
 }

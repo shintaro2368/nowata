@@ -1,5 +1,5 @@
-import { searchWork } from "@/actions/work-action";
-import TaskAndWorks from "@/types/task-and-works";
+"use client";
+
 import SearchIcon from "@mui/icons-material/Search";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -9,44 +9,41 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { TaskStatus } from "@prisma/client";
-import { useEffect, useState } from "react";
+import dayjs from "dayjs";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRef } from "react";
 import DatePickerProvider from "../date-picker-provider";
 
-export type WorkSearchProp = {
-  taskTitle: string | undefined;
-  from: Date | undefined;
-  to: Date | undefined;
-  status: TaskStatus[];
-};
+export default function WorkSearch() {
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const { replace } = useRouter();
+  const urlSearchParams = useRef<URLSearchParams>(
+    new URLSearchParams(searchParams)
+  );
 
-export default function WorkSearch({
-  handleSetResult,
-}: {
-  handleSetResult: (searchParam: TaskAndWorks[]) => void;
-}) {
-  const [searchParam, setSearchParam] = useState<WorkSearchProp>({
-    taskTitle: undefined,
-    from: undefined,
-    to: undefined,
-    status: ["DOING"],
-  });
+  function handleChangeStatuses(status: TaskStatus) {
+    if (urlSearchParams.current.has("statuses", status)) {
+      urlSearchParams.current.delete("statuses", status);
+    } else {
+      urlSearchParams.current.append("statuses", status);
+    }
+  }
 
-  const handleSearch = async () => {
-    const result = await searchWork(searchParam);
-    console.log("result", JSON.stringify(result, null, "\t"));
-    handleSetResult(result);
-  };
+  function handleChangeQueryParameter(key: string, value: string) {
+    if (value) {
+      urlSearchParams.current.set(key, value);
+    } else {
+      urlSearchParams.current.delete(key);
+    }
+  }
 
-  useEffect(() => {
-    const func = async () => {
-      await handleSearch();
-    };
-
-    func();
-  }, []);
+  function handleSearch() {
+    replace(`${pathname}?${urlSearchParams.current.toString()}`);
+  }
 
   return (
-    <Box bgcolor={grey[100]} borderRadius={4} paddingY={2} paddingX={4}>
+    <Box bgcolor="#fff" borderRadius={4} paddingY={2} paddingX={4}>
       <Box>
         <Stack spacing={2}>
           <Stack direction="row" spacing={4} alignItems="end">
@@ -54,13 +51,10 @@ export default function WorkSearch({
               <TextField
                 label="タスク"
                 variant="standard"
-                value={searchParam.taskTitle}
-                onChange={(e) =>
-                  setSearchParam((prev) => {
-                    return { ...prev, taskTitle: e.target.value };
-                  })
-                }
-                
+                defaultValue={urlSearchParams.current.get("title")?.toString()}
+                onChange={(e) => {
+                  handleChangeQueryParameter("title", e.target.value);
+                }}
               />
             </Box>
             <Box>
@@ -69,30 +63,10 @@ export default function WorkSearch({
                   <Button
                     sx={{ borderColor: grey[500] }}
                     color="inherit"
-                    variant={
-                      searchParam.status.find((status) => status === value)
-                        ? "contained"
-                        : "outlined"
-                    }
-                    onClick={() => {
-                      if (
-                        !searchParam.status?.find((status) => status === value)
-                      ) {
-                        setSearchParam((prev) => {
-                          return { ...prev, status: [...prev.status, value] };
-                        });
-                      } else {
-                        setSearchParam((prev) => {
-                          return {
-                            ...prev,
-                            status: prev.status.filter(
-                              (status) => status !== value
-                            ),
-                          };
-                        });
-                      }
-                    }}
                     key={value}
+                    onClick={() => {
+                      handleChangeStatuses(value);
+                    }}
                   >
                     {value}
                   </Button>
@@ -102,13 +76,28 @@ export default function WorkSearch({
 
             <DatePickerProvider>
               <DatePicker
+                defaultValue={dayjs(
+                  urlSearchParams.current.get("from") || undefined
+                )}
                 label="稼働期間(開始)"
                 slotProps={{ textField: { variant: "standard" } }}
+                onChange={(value) => {
+                  const dateStr = value?.format("YYYY-MM-DD") || "";
+                  console.log(dateStr);
+                  handleChangeQueryParameter("from", dateStr);
+                }}
               />
               <span>-</span>
               <DatePicker
+                defaultValue={dayjs(
+                  urlSearchParams.current.get("to") || undefined
+                )}
                 label="稼働期間(終了)"
                 slotProps={{ textField: { variant: "standard" } }}
+                onChange={(value) => {
+                  const dateStr = value?.format("YYYY-MM-DD") || "";
+                  handleChangeQueryParameter("to", dateStr);
+                }}
               />
             </DatePickerProvider>
           </Stack>

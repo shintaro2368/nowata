@@ -1,22 +1,31 @@
-import Link from "next/link";
-import Image from "next/image";
 import { auth, signOut } from "@/auth";
-import prisma from "@/db";
+import AttendanceForm from "@/components/attendance-form";
 import ProjectForm from "@/components/project-form";
+import prisma from "@/db";
+import Link from "next/link";
 
 import { Nav, NavList } from "@/components/nav-list";
 
 import BarChartIcon from "@mui/icons-material/BarChart";
-import TaskIcon from "@mui/icons-material/Task";
-import PendingActionsIcon from "@mui/icons-material/PendingActions";
 import DateRangeIcon from "@mui/icons-material/DateRange";
+import PendingActionsIcon from "@mui/icons-material/PendingActions";
 import SettingsIcon from "@mui/icons-material/Settings";
+import TaskIcon from "@mui/icons-material/Task";
+import Box from "@mui/material/Box";
+import grey from "@mui/material/colors/grey";
 
 const navs: Nav[] = [
   { icon: BarChartIcon, title: "ダッシュボード", href: "/dashboard" },
   { icon: TaskIcon, title: "タスク", href: "/tasks" },
   { icon: PendingActionsIcon, title: "稼働状況", href: "/works" },
-  { icon: DateRangeIcon, title: "レポート", href: "/reports" },
+  {
+    icon: DateRangeIcon,
+    title: "レポート",
+    subNavs: [
+      { icon: DateRangeIcon, title: "全般", href: "/reports/common" },
+      { icon: DateRangeIcon, title: "プロジェクト", href: "/reports/project" },
+    ],
+  },
   { icon: SettingsIcon, title: "設定", href: "/settings" },
 ];
 
@@ -27,11 +36,20 @@ export default async function DashboardLayout({
 }>) {
   const session = await auth();
   const user = session?.user;
+
+  if (!user?.id) {
+    return;
+  }
+
   const projects = await prisma.project.findMany({
     where: { createdBy: { id: user?.id } },
   });
   const activeProject = await prisma.project.findUnique({
     where: { selecterId: user?.id },
+  });
+
+  const runningDailyReport = await prisma.dailyReport.findFirst({
+    where: { userId: user?.id, endAt: null },
   });
 
   return (
@@ -83,7 +101,16 @@ export default async function DashboardLayout({
         </div>
       </div>
       <div className="w-full">
-        <div className="border-b-2 border-gray-400 shadow-md">
+        <Box
+          padding={1}
+          borderBottom={1}
+          borderColor={grey[500]}
+          boxShadow={3}
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          sx={{ width: "100%" }}
+        >
           <ProjectForm
             projects={projects.map((project) => ({
               id: project.id,
@@ -92,8 +119,11 @@ export default async function DashboardLayout({
               description: project.description,
             }))}
           />
-        </div>
-        {children}
+          <AttendanceForm isWorking={!!runningDailyReport} />
+        </Box>
+        <Box height="100%" bgcolor={grey[100]} padding={2}>
+          {children}
+        </Box>
       </div>
     </div>
   );

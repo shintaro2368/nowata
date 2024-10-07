@@ -1,77 +1,64 @@
 "use client";
 
-import DatePickerProvider from "./date-picker-provider";
-import { DatePicker, renderTimeViewClock } from "@mui/x-date-pickers";
-import { TimePicker, StaticTimePicker } from "@mui/x-date-pickers";
-import dayjs from "dayjs"
-import { useState } from "react";
-import { createSetting } from "@/actions/setting-action";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import Accordion from "@mui/material/Accordion";
+import AccordionActions from "@mui/material/AccordionActions";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import Button from "@mui/material/Button";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
+import { Project, Setting } from "@prisma/client";
+import { User } from "next-auth";
+import { Fragment } from "react";
+import Box from "@mui/material/Box"
+import grey from "@mui/material/colors/grey"
 
-export default function SettingsForm() {
-  const [start, setStart] = useState<dayjs.Dayjs | null>(null);
-  const [end, setEnd] = useState<dayjs.Dayjs | null>(null);
-  const [breakTime, setBreakTime] = useState<dayjs.Dayjs | null>(null);
+import ProjectAccordion from "./setting/project-accordion";
+import WorkAccordion from "./setting/work-accordion";
+
+export type SettingFormProps = {
+  user: User;
+  project: Project;
+  setting: Setting,
+};
+
+export default function SettingsForm({
+  settingFormProps,
+}: {
+  settingFormProps: SettingFormProps;
+}) {
+  const { user, project, setting } = settingFormProps;
 
   return (
-    <DatePickerProvider>
-      <form action={createSetting}>
-        <div className="flex flex-col gap-4">
-          <div>
-            <TimePicker
-              name="start"
-              value={start}
-              views={["hours", "minutes"]}
-              format="HH時mm分"
-              label="出勤"
-              viewRenderers={{
-                hours: renderTimeViewClock,
-                minutes: renderTimeViewClock,
-              }}
-              onChange={(value) => {
-                setStart(value);
-              }}
-            />
-          </div>
-          <div>
-            <TimePicker
-              name="end"
-              value={end}
-              views={["hours", "minutes"]}
-              format="HH時mm分"
-              label="退勤"
-              viewRenderers={{
-                hours: renderTimeViewClock,
-                minutes: renderTimeViewClock,
-              }}
-              onChange={(value) => {
-                setEnd(value);
-              }}
-            />
-          </div>
-          <div>
-            <TimePicker
-              name="breakTime"
-              value={breakTime}
-              views={["hours", "minutes"]}
-              format="HH時間mm分"
-              label="休憩時間"
-              viewRenderers={{
-                hours: renderTimeViewClock,
-                minutes: renderTimeViewClock,
-              }}
-              onChange={(value) => {
-                setBreakTime(value);
-              }}
-            />
-          </div>
-          <div>
-            合計時間 {Math.abs(start?.diff(end, "minutes") ?? 0) / 60}時間
-          </div>
-        </div>
-        <button type="submit" className="bg-blue-500 text-white p-2 rounded-md">
-          登録
-        </button>
-      </form>
-    </DatePickerProvider>
+    <Fragment>
+      <Box bgcolor={grey[200]} width="fit-content" borderRadius={2} margin={1}>
+        <Stack spacing={2} width={900} padding={2}>
+          <ProjectAccordion project={project} />
+          <WorkAccordion setting={setting}/>
+          <Accordion>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              アカウント
+            </AccordionSummary>
+            <AccordionDetails>
+              <Stack spacing={2}>
+                <TextField
+                  label="お名前"
+                  disabled
+                  variant="outlined"
+                  value={user.name}
+                />
+                <TextField label="メールアドレス" disabled value={user.email} />
+              </Stack>
+            </AccordionDetails>
+            <AccordionActions>
+              <Button variant="contained" color="error">
+                アカウント削除
+              </Button>
+            </AccordionActions>
+          </Accordion>
+        </Stack>
+      </Box>
+    </Fragment>
   );
 }

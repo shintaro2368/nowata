@@ -30,8 +30,8 @@ model User {
   role          Role            @default(User)
   Authenticator Authenticator[]
 
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  createdAt      DateTime      @default(now()) 
+  updatedAt      DateTime      @updatedAt 
   createdProject Project[]     @relation("CreatedProjects")
   activeProject  Project?      @relation("ActiveProject")
   DailyReport    DailyReport[]
@@ -50,8 +50,8 @@ model Account {
   id_token          String?
   session_state     String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) 
+  updatedAt DateTime @updatedAt 
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -61,17 +61,17 @@ model Account {
 model Session {
   sessionToken String   @unique
   userId       String
-  expires      DateTime
+  expires      DateTime 
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) 
+  updatedAt DateTime @updatedAt 
 }
 
 model VerificationToken {
   identifier String
   token      String
-  expires    DateTime
+  expires    DateTime 
 
   @@id([identifier, token])
 }
@@ -94,34 +94,41 @@ model Authenticator {
 
 // setting model
 model Setting {
-  id                     String    @id @default(cuid())
-  standardStartWorkTime  DateTime?
-  standardEndWorkTime    DateTime?
-  standardBreakTime      Decimal?
-  defaultWorkDescription String?
-  minimumWorkTime        Decimal?
-  standardWorkTime       Decimal?
-  maximumWorkTime        Decimal?
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
-  projectId              String    @unique
+  id                      String   @id @default(cuid())
+  standardStartWorkHour   Int?
+  standardStartWorkMinute Int?
+  standardEndWorkHour     Int?
+  standardEndWorkMinute   Int?
+  standardBreakHour       Int?
+  standardBreakMinute     Int?
+  defaultWorkDescription  String?
+  minimumWorkHour         Int?
+  minimumWorkMinute       Int?
+  standardWorkHour        Int?
+  standardWorkMinute      Int?
+  maximumWorkHour         Int?
+  maximumWorkMinute       Int?
+  createdAt               DateTime @default(now()) 
+  updatedAt               DateTime @updatedAt 
+  projectId               String   @unique
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 // project model
 model Project {
-  id            String   @id @default(cuid())
+  id            String        @id @default(cuid())
   title         String
   description   String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime      @default(now()) 
+  updatedAt     DateTime      @updatedAt 
   userId        String
-  selecterId    String?  @unique
-  createdBy     User     @relation("CreatedProjects", fields: [userId], references: [id], onDelete: Cascade)
-  activeProject User?    @relation("ActiveProject", fields: [selecterId], references: [id], onDelete: Cascade)
+  selecterId    String?       @unique
+  createdBy     User          @relation("CreatedProjects", fields: [userId], references: [id], onDelete: Cascade)
+  activeProject User?         @relation("ActiveProject", fields: [selecterId], references: [id], onDelete: Cascade)
   Task          Task[]
   Setting       Setting?
+  DailyReport   DailyReport[]
 }
 
 enum TaskStatus {
@@ -140,20 +147,20 @@ model Task {
   project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
   Work        Work[]
   cardBgColor String?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime   @default(now()) 
+  updatedAt   DateTime   @updatedAt 
 }
 
 // work model
 model Work {
   id          String    @id @default(cuid())
   description String?
-  startAt     DateTime
-  endAt       DateTime?
+  startAt     DateTime  
+  endAt       DateTime? 
   totalTime   Decimal?
   taskId      String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime  @default(now()) 
+  updatedAt   DateTime  @updatedAt 
   task        Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
 }
 
@@ -164,17 +171,24 @@ enum WorkStyle {
   DayOff
 }
 
-// daily report model
+enum ReportType {
+  Common
+  Project
+}
+
 model DailyReport {
-  id          String    @id @default(cuid())
+  id          String     @id @default(cuid())
+  reportType  ReportType @default(Common)
   date        DateTime
   description String?
-  startAt     DateTime
-  endAt       DateTime?
+  startAt     DateTime  
+  endAt       DateTime?  
   breakTime   Decimal
   userId      String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  projectId   String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt 
   workStyle   WorkStyle
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project     Project?   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }

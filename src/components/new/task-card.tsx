@@ -11,7 +11,7 @@ import CardContent from "@mui/material/CardContent";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { Task } from "@prisma/client";
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { SketchPicker } from "react-color";
 import ConfirmDeleteItem from "../confirm-delete-item";
 
@@ -34,7 +34,7 @@ export default function TaskCard({
   };
 
   return (
-    <>
+    <Fragment>
       <Card
         key={task.id}
         sx={{ borderRadius: 2, maxWidth: 400, backgroundColor: color }}
@@ -126,6 +126,6 @@ export default function TaskCard({
         handleClose={() => setDisplayConfirmDelete(false)}
         action={async () => deleteTask(task.id)}
       />
-    </>
+    </Fragment>
   );
 }
