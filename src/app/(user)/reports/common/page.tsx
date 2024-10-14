@@ -1,28 +1,54 @@
 import { auth } from "@/auth";
+import ReportList from "@/components/new/report-list";
 import prisma from "@/db";
-import Box from "@mui/material/Box";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
-import { WorkStyle } from "@prisma/client";
-import dayjs from "dayjs";
-import { createManyDailyReport } from "@/actions/seeds/seed";
+import { dayOfWeeks, displayWorkStyle, PDFReport} from "@/lib/definitions";
+import { DailyReport } from "@prisma/client";
+import dayjs, { Dayjs } from "dayjs";
 import utc from "dayjs/plugin/utc";
 dayjs.extend(utc);
 
-const dayOfWeeks = ["日", "月", "火", "水", "木", "金", "土"];
-const displayWorkStyle: { [key in WorkStyle]: string } = {
-  AtCompany: "出勤",
-  AtHome: "在宅出勤",
-  Absent: "欠勤",
-  DayOff: "休日",
-};
+const startOfCurrentMonth = dayjs().startOf("month");
+const endOfCurrentMonth = dayjs().endOf("month");
 
-function formatDate(date: Date) {
-  return `${date.getHours()}:${date.getMinutes()}`;
+function fmtTime(hour: number, minutes: number): string {
+  return `${hour < 10 ? "0" : ""}${hour}:${minutes < 10 ? "0" : ""}${minutes}`;
+}
+
+function createPDFReport(from: Dayjs, to: Dayjs, reports: DailyReport[]): PDFReport[] {
+  const pdfReports: PDFReport[] =[];
+
+  const diff = to.diff(from, "day");
+  
+  for(let i = 0; i <= diff; i++) {
+    const targetDate = from.add(i, "day").add(9, "hour");
+    
+    const record = reports.find(report => report.date.toDateString() === targetDate.toDate().toDateString());
+    // console.log(record);
+    const id = record ? record.id : undefined;
+    const date = targetDate.toDate();
+    const day = `${targetDate.get("M") + 1}/${targetDate.get("D")}`;
+    const dayOfWeek = dayOfWeeks[targetDate.day()];
+    const workStyle = record ? displayWorkStyle[record.workStyle] : undefined;
+    const start = record?.startAt ? dayjs(record.startAt).utc().format("HH:mm") : undefined;
+    const end = record?.endAt ? dayjs(record.endAt).utc().format("HH:mm") : undefined;
+    const breakTime = fmtTime(record ? record.breakTimeHour:0, record ? record.breakTimeMinute:0);
+    const description = record?.description ? record.description : undefined;
+    const workTime = fmtTime(record ? record.workTimeHour : 0, record ? record.workTimeMinute : 0);
+  
+    pdfReports.push({
+      id,
+      date,
+      day,
+      dayOfWeek,
+      workStyle,
+      start,
+      end,
+      breakTime,
+      description,
+      workTime,
+    });
+  }
+  return pdfReports;
 }
 
 export default async function ReportsCommon() {
@@ -32,70 +58,21 @@ export default async function ReportsCommon() {
     return new Error("Unautorized");
   }
 
-  const reportCommon = await prisma.dailyReport.findMany({
+  const reports = await prisma.dailyReport.findMany({
     where: {
       userId,
       reportType: "Common",
+      date: {
+        gte: startOfCurrentMonth.toDate(),
+        lte: endOfCurrentMonth.toDate(),
+      },
     },
     orderBy: {
       date: "asc",
     },
   });
-  console.debug(reportCommon);
-  const daysInCurrentMonth = dayjs().daysInMonth();
-  const startOfCurrentMonth = dayjs().startOf("month");
 
-  const elms: JSX.Element[] = [];
-  for (let day = 0; day < daysInCurrentMonth; day++) {
-    const dayJs = startOfCurrentMonth.clone().add(day, "day");
-    const report = reportCommon.find(
-      (entry) => entry.date.getDate() === dayJs.get("D")
-    );
-    let diff = undefined;
-    if(report?.startAt && report.endAt) {
-      diff = dayjs(report.endAt).diff(dayjs(report.startAt), "minutes") / 60;
-    }
-    elms.push(
-      <TableRow key={day} sx={{ "& > .MuiTableCell-root": { padding: 1 } }}>
-        <TableCell>{dayJs.get("M")+1}/{dayJs.get("D")}</TableCell>
-        <TableCell>{dayOfWeeks[dayJs.day()]}</TableCell>
-        <TableCell>
-          {report?.workStyle && displayWorkStyle[report.workStyle]}
-        </TableCell>
-        <TableCell>
-          {report?.startAt && dayjs(report.startAt).utc().format("HH:mm")}
-        </TableCell>
-        <TableCell>
-          {report?.endAt && dayjs(report.endAt).utc().format("HH:mm")}
-        </TableCell>
-        <TableCell>{report?.breakTime.toNumber()}</TableCell>
-        <TableCell>{report?.description}</TableCell>
-        <TableCell>{diff}</TableCell>
-      </TableRow>
-    );
-  }
-
-  //await createManyDailyReport();
-
-  return (
-    <Box maxWidth={1400}>
-      <TableContainer sx={{ width: "100%" }}>
-        <Table sx={{ textWrap: "nowrap" }}>
-          <TableHead>
-            <TableRow>
-              <TableCell width="5%">日付</TableCell>
-              <TableCell width="5%">曜日</TableCell>
-              <TableCell width="5%">種別</TableCell>
-              <TableCell width="5%">出勤</TableCell>
-              <TableCell width="5%">退勤</TableCell>
-              <TableCell width="5%">休憩時間</TableCell>
-              <TableCell>勤務内容</TableCell>
-              <TableCell width="5%">勤務時間</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>{elms}</TableBody>
-        </Table>
-      </TableContainer>
-    </Box>
-  );
+  
+  const pdfReports = createPDFReport(startOfCurrentMonth, endOfCurrentMonth, reports);
+  return <ReportList pdfReports={pdfReports} />;
 }

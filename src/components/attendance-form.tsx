@@ -4,10 +4,11 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Snackbar from "@mui/material/Snackbar";
-
+import { usePathname } from "next/navigation";
 import { Fragment, useState } from "react";
 
 export default function AttendanceForm({ isWorking }: { isWorking: boolean }) {
+  const pathname = usePathname();
   const [state, setState] = useState<{
     open: boolean;
     message: string | null;
@@ -23,7 +24,8 @@ export default function AttendanceForm({ isWorking }: { isWorking: boolean }) {
     });
   };
 
-  const handleOnClick = () => {
+  const handleOnClick = async () => {
+    isWorking ? await endWork(pathname) : await startWork(pathname);
     setState({
       open: true,
       message: isWorking
@@ -35,27 +37,23 @@ export default function AttendanceForm({ isWorking }: { isWorking: boolean }) {
     <Fragment>
       <Box>
         {isWorking ? (
-          <form action={endWork}>
-            <Button
-              type="submit"
-              variant="contained"
-              color="success"
-              onClick={handleOnClick}
-            >
-              退勤
-            </Button>
-          </form>
+          <Button
+            type="submit"
+            variant="contained"
+            color="success"
+            onClick={handleOnClick}
+          >
+            退勤
+          </Button>
         ) : (
-          <form action={startWork}>
-            <Button
-              variant="contained"
-              type="submit"
-              color="primary"
-              onClick={handleOnClick}
-            >
-              出勤
-            </Button>
-          </form>
+          <Button
+            variant="contained"
+            type="submit"
+            color="primary"
+            onClick={handleOnClick}
+          >
+            出勤
+          </Button>
         )}
       </Box>
 
