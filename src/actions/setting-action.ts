@@ -6,12 +6,26 @@ import parseFiledErros from "@/validation/parseValidationError";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-
 const validationSchema = z.object({
-  stdStartHour: z.coerce.number().optional(),
-  stdStartMinute: z.coerce.number().optional(),
-  stdEndHour: z.coerce.number().optional(),
-  stdEndMinute: z.coerce.number().optional(),
+  useStandardTime: z.coerce.boolean(),
+  stdStartHour: z.coerce
+    .number()
+    .min(0, "時間は正の整数で入力してください")
+    .optional(),
+  stdStartMinute: z.coerce
+    .number()
+    .min(0, "分は正の整数で入力してください")
+    .max(60, "分は60以下で入力してください")
+    .optional(),
+  stdEndHour: z.coerce
+    .number()
+    .min(0, "時間は正の整数で入力してください")
+    .optional(),
+  stdEndMinute: z.coerce
+    .number()
+    .min(0, "分は正の整数で入力してください")
+    .max(60, "分は60以下で入力してください")
+    .optional(),
   breakHour: z.coerce
     .number()
     .min(0, "時間は正の整数で入力してください")
@@ -26,24 +40,6 @@ const validationSchema = z.object({
     .min(0, "時間は正の整数で入力してください")
     .optional(),
   stdWorkMinute: z.coerce
-    .number()
-    .min(0, "分は正の整数で入力してください")
-    .max(60, "分は60以下で入力してください")
-    .optional(),
-  minWorkHour: z.coerce
-    .number()
-    .min(0, "時間は正の整数で入力してください")
-    .optional(),
-  minWorkMinute: z.coerce
-    .number()
-    .min(0, "分は正の整数で入力してください")
-    .max(60, "分は正の整数で入力してください")
-    .optional(),
-  maxWorkHour: z.coerce
-    .number()
-    .min(0, "時間は正の整数で入力してください")
-    .optional(),
-  maxWorkMinute: z.coerce
     .number()
     .min(0, "分は正の整数で入力してください")
     .max(60, "分は60以下で入力してください")
@@ -79,12 +75,6 @@ export async function updataSetting(prevState: any, formData: FormData) {
     stdEndMinute,
     breakHour,
     breakMinute,
-    minWorkHour,
-    minWorkMinute,
-    stdWorkHour,
-    stdWorkMinute,
-    maxWorkHour,
-    maxWorkMinute,
   } = validationFields.data;
 
   const project = await prisma.project.findUnique({
@@ -96,7 +86,6 @@ export async function updataSetting(prevState: any, formData: FormData) {
   if (!project) {
     return {
       message: "Project not found",
-
     };
   }
   await prisma.setting.update({
@@ -110,12 +99,6 @@ export async function updataSetting(prevState: any, formData: FormData) {
       standardEndWorkMinute: stdEndMinute,
       standardBreakHour: breakHour,
       standardBreakMinute: breakMinute,
-      minimumWorkHour: minWorkHour,
-      minimumWorkMinute: minWorkMinute,
-      standardWorkHour: stdWorkHour,
-      standardWorkMinute: stdWorkMinute,
-      maximumWorkHour: maxWorkHour,
-      maximumWorkMinute: maxWorkMinute,
     },
   });
 

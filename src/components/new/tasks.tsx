@@ -6,12 +6,14 @@ import { useState } from "react";
 import TaskForm from "./task-form";
 import TaskGrid from "./task-grid";
 import TaskAndWorks from "@/types/task-and-works";
+import Grid from "@mui/material/Grid"
 
 export default function Tasks({ tasks }: { tasks: TaskAndWorks []}) {
   const [editTask, setEditTask] = useState<Task | null>(null);
   const [displayForm, setDisplayForm] = useState(false);
 
   const handleOpenForm = () => {
+    setEditTask(null);
     setDisplayForm(true);
   };
 
@@ -21,24 +23,26 @@ export default function Tasks({ tasks }: { tasks: TaskAndWorks []}) {
 
   const handleSetEditTask = (task: Task) => {
     setEditTask(task);
-    handleOpenForm();
+    setDisplayForm(true)
   }
 
   return (
-    <Box component="div" display="flex">
-      <Box component="div" sx={{ width: "100%"}}>
+    <Grid container padding={2}>
+      <Grid item xs={8}>
         <TaskGrid
           tasks={tasks}
           handleOpenForm={handleOpenForm}
           isOpenForm={displayForm}
           handleSetEditTask={handleSetEditTask}
         />
-      </Box>
-      <Box component="div">
+      </Grid>
+      <Grid item xs={4}>
         {displayForm && (
-          <TaskForm task={editTask} handleCloseForm={handleCloseForm} />
+          <Box position="sticky" width="100%" left={0} top={0}>
+            <TaskForm task={editTask} handleCloseForm={handleCloseForm} />
+          </Box>
         )}
-      </Box>
-    </Box>
+      </Grid>
+    </Grid>
   );
 }

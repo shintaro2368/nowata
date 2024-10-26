@@ -5,7 +5,6 @@ import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import { ListItemIcon } from "@mui/material";
 import Collapse from "@mui/material/Collapse";
-import blue from "@mui/material/colors/blue";
 import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
@@ -32,22 +31,30 @@ export function NavList({ navs }: { navs: Nav[] }) {
             key={nav.title}
             LinkComponent={Link}
             href={nav.href}
+            className={`m-3 rounded-lg hover:opacity-90 ${
+              nav.href === pathname
+                ? "bg-blue-300"
+                : "bg-white hover:bg-blue-100"
+            }`}
             sx={{
               py: 3,
               px: 2,
-              backgroundColor: nav.href === pathname ? blue[200] : undefined,
+              //backgroundColor: nav.href === pathname ? blue[300] : undefined,
             }}
           >
             <ListItemIcon>
               <nav.icon />
             </ListItemIcon>
-            <ListItemText primary={nav.title} />
+            <ListItemText primary={nav.title} className="font-bold" />
           </ListItemButton>
         ) : (
           <Fragment key={nav.title}>
             <ListItemButton
               onClick={() => setOpen((prev) => !prev)}
               sx={{ py: 3, px: 2 }}
+              className={`m-3 rounded-lg hover:opacity-90 ${
+                nav.href === pathname ? "bg-blue-300" : "bg-white"
+              }`}
             >
               <ListItemIcon>
                 <nav.icon />
@@ -63,6 +70,11 @@ export function NavList({ navs }: { navs: Nav[] }) {
                     LinkComponent={Link}
                     href={subNav.href!!}
                     sx={{ pl: 4 }}
+                    className={`m-3 rounded-lg hover:opacity-90 ${
+                      subNav.href === pathname
+                        ? "bg-blue-300"
+                        : "bg-white hover:bg-blue-100"
+                    }`}
                   >
                     <ListItemIcon>
                       <subNav.icon />

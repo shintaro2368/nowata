@@ -29,6 +29,7 @@ export default function HourAndMinutes({
       <label>{label}</label>
       <Stack direction="row" spacing={1}>
         <TextField
+          inputProps={{ style: { textAlign: "right" } }}
           defaultValue={defaultHour}
           name={hourName}
           value={hour}
@@ -48,6 +49,7 @@ export default function HourAndMinutes({
           }}
         />
         <TextField
+          inputProps={{ style: { textAlign: "right" } }}
           defaultValue={defaultMinute}
           name={minuteNuame}
           value={minute}

@@ -1,6 +1,6 @@
 "use client";
 
-import { PDFReport, ReportForm } from "@/lib/definitions";
+import { PDFReport } from "@/lib/definitions";
 import Box from "@mui/material/Box";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -31,24 +31,39 @@ export default function ReportList({
     } else {
       commits.current.push(pdfReport);
     }
-    
   }
   return (
-    <Box maxWidth={1400}>
+    <Box padding={2}>
       <OpenPdfComponet pdfReports={pdfReports} />
-      <ReportSaveButton pdfReports={commits.current}/>
-      <TableContainer sx={{ width: "100%" }}>
+      <ReportSaveButton pdfReports={commits.current} />
+      <TableContainer className="w-full flex bg-white p-2 rounded-lg">
         <Table sx={{ textWrap: "nowrap" }}>
           <TableHead>
             <TableRow>
-              <TableCell width="5%">日付</TableCell>
-              <TableCell width="5%">曜日</TableCell>
-              <TableCell width="5%">種別</TableCell>
-              <TableCell width="5%">出勤</TableCell>
-              <TableCell width="5%">退勤</TableCell>
-              <TableCell width="5%">休憩時間</TableCell>
-              <TableCell>勤務内容</TableCell>
-              <TableCell width="5%">勤務時間</TableCell>
+              <TableCell width="5%" className="p-0">
+                <p className="bg-gray-100 m-1 p-4 rounded-lg">日付</p>
+              </TableCell>
+              <TableCell width="5%" className="p-0">
+                <p className="bg-gray-100 m-1 p-4 rounded-lg">曜日</p>
+              </TableCell>
+              <TableCell width="5%" className="p-0">
+                <p className="bg-gray-100 m-1 p-4 rounded-lg">種別</p>
+              </TableCell>
+              <TableCell width="5%" className="p-0">
+                <p className="bg-gray-100 m-1 p-4 rounded-lg">出勤</p>
+              </TableCell>
+              <TableCell width="5%" className="p-0">
+                <p className="bg-gray-100 m-1 p-4 rounded-lg">退勤</p>
+              </TableCell>
+              <TableCell width="5%" className="p-0">
+                <p className="bg-gray-100 m-1 p-4 rounded-lg">休憩時間</p>
+              </TableCell>
+              <TableCell className="p-0">
+                <p className="bg-gray-100 m-1 p-4 rounded-lg">勤務内容</p>
+              </TableCell>
+              <TableCell width="5%" className="p-0">
+                <p className="bg-gray-100 m-1 p-4 rounded-lg">勤務時間</p>
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>

@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import prisma from "@/db";
-import { PDFReport } from "@/lib/definitions";
+import { PDFReport, displayWorkStyle } from "@/lib/definitions";
 import dayjs from "dayjs";
 import { revalidatePath } from "next/cache";
 
@@ -22,21 +22,24 @@ export async function startWork(pathname: string) {
     },
   });
 
+  const now = dayjs().add(9, "hour");
+  const today = dayjs().startOf("d").add(9, "hour");
+
   if (notEndWork) {
     // 型情報ではnullだが念のためnullまたはundefinedで評価
     if (notEndWork.endAt == null) {
       throw new Error("出勤するには退勤を行ってください");
-    } else {
+    }
+    if (dayjs(notEndWork.date).isSame(today)) {
       throw new Error(
         "本日の勤務はすでに終了しています\n修正をされる場合はレポート全般より入力してください"
       );
     }
   }
 
-  const now = dayjs().add(9, "hour");
   await prisma.dailyReport.create({
     data: {
-      date: new Date(now.toDate().setHours(0, 0, 0, 0)),
+      date: today.toDate(),
       workStyle: "AtCompany",
       startAt: now.toDate(),
       userId,
@@ -91,7 +94,7 @@ function fmtTimeToDate(
 
   const yyyMmDd = dayjs(date).format("YYYY-MM-DD");
   // iso8601のフォーマットで変換
-  return dayjs(`${yyyMmDd} ${fmtTime}`).add(9,"hour").toDate();
+  return dayjs(`${yyyMmDd} ${fmtTime}`).add(9, "hour").toDate();
 }
 
 function fmtTimeToHourMinute(fmtTime: string): number[] {
@@ -110,17 +113,22 @@ function fmtTimeToHourMinute(fmtTime: string): number[] {
 }
 
 export async function update(pdfReports: PDFReport[]) {
-  console.log(pdfReports);
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) {
+    throw new Error("ログインをしてください");
+  }
+  
   const promises = pdfReports.map(async (pdfReoprt) => {
     const { id, date, start, end, breakTime, description } = pdfReoprt;
     const report = await prisma.dailyReport.findUnique({ where: { id } });
 
-    if (!report) {
+    if (!pdfReoprt.id && !report) {
       throw new Error(
         "一部のデータがすでに削除されています\nページを再読み込み後再度操作してください。"
       );
     }
-
+    
     const startAt = fmtTimeToDate(date, start);
     const endAt = fmtTimeToDate(date, end);
     let workTimeHour = 0;
@@ -131,20 +139,36 @@ export async function update(pdfReports: PDFReport[]) {
       workTimeMinute = diff % 60;
     }
     const [breakTimeHour, breakTimeMinute] = fmtTimeToHourMinute(breakTime);
-    await prisma.dailyReport.update({
-      where: {
-        id,
-      },
-      data: {
-        startAt,
-        endAt,
-        breakTimeHour,
-        breakTimeMinute,
-        description,
-        workTimeHour,
-        workTimeMinute,
-      },
-    });
+    if(pdfReoprt.id) {
+      await prisma.dailyReport.update({
+        where: {
+          id,
+        },
+        data: {
+          startAt,
+          endAt,
+          breakTimeHour,
+          breakTimeMinute,
+          description,
+          workTimeHour,
+          workTimeMinute,
+        },
+      });
+    } else {
+      // await prisma.dailyReport.create({
+      //   data: {
+      //     userId,
+      //     date,
+      //     startAt,
+      //     endAt,
+      //     breakTimeHour,
+      //     breakTimeMinute,
+      //     description,
+      //     workTimeHour,
+      //     workTimeMinute
+      //   }
+      // })
+    }
   });
 
   await Promise.all(promises);

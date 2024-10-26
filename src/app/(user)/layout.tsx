@@ -54,53 +54,55 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <div className="flex flex-col w-[300px] bg-blue-200">
-        <div className="grow">
-          <Link href="/dashboard">
-            <h2 className="text-2xl font-medium text-center p-6 mb-4">
-              Nowata
-            </h2>
-          </Link>
-          <NavList navs={navs} />
-        </div>
-        <div className="bg-blue-500 flex items-center justify-between py-4 px-4">
-          <div className="flex items-center">
-            <img
-              src={user?.image ?? ""}
-              alt="user"
-              className="inline-block w-8 h-8 rounded-full"
-            />
-            <p className="text-white text-sm ml-3">{user?.name}</p>
+      <div className="w-72 flex-none">
+        <div className="flex flex-col h-full">
+          <div className="grow">
+            <Link href="/dashboard">
+              <div className="bg-gradient-to-tr from-blue-500 to-blue-300 py-10 m-3 text-white rounded-lg hover:opacity-95">
+                <h2 className="text-3xl font-medium text-center">Nowata</h2>
+              </div>
+            </Link>
+            <NavList navs={navs} />
           </div>
-          <form
-            action={async () => {
-              "use server";
-              await signOut({ redirectTo: "/" });
-            }}
-            className="flex items-center"
-          >
-            <button type="submit" title="Logout">
-              <svg
-                className="h-8 w-8 text-white"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                strokeWidth="2"
-                stroke="currentColor"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                {" "}
-                <path stroke="none" d="M0 0h24v24H0z" />{" "}
-                <path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2" />{" "}
-                <path d="M7 12h14l-3 -3m0 6l3 -3" />
-              </svg>
-            </button>
-          </form>
+          <div className="bg-gray-400 flex items-center justify-between p-4 m-3 rounded-lg">
+            <div className="flex items-center">
+              <img
+                src={user?.image ?? ""}
+                alt="user"
+                className="inline-block w-8 h-8 rounded-full"
+              />
+              <p className="text-white text-sm ml-3">{user?.name}</p>
+            </div>
+            <form
+              action={async () => {
+                "use server";
+                await signOut({ redirectTo: "/" });
+              }}
+              className="flex items-center"
+            >
+              <button type="submit" title="Logout">
+                <svg
+                  className="h-8 w-8 text-white"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  strokeWidth="2"
+                  stroke="currentColor"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  {" "}
+                  <path stroke="none" d="M0 0h24v24H0z" />{" "}
+                  <path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2" />{" "}
+                  <path d="M7 12h14l-3 -3m0 6l3 -3" />
+                </svg>
+              </button>
+            </form>
+          </div>
         </div>
       </div>
-      <div className="w-full">
+      <div className="w-full flex flex-col">
         <Box
           padding={1}
           borderBottom={1}
@@ -121,7 +123,12 @@ export default async function DashboardLayout({
           />
           <AttendanceForm isWorking={!!runningDailyReport} />
         </Box>
-        <Box height="100%" bgcolor={grey[100]} padding={2}>
+        <Box
+          flexGrow={1}
+          bgcolor={grey[100]}
+          //padding={2}
+          sx={{ overflow: "auto" }}
+        >
           {children}
         </Box>
       </div>

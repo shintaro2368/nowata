@@ -95,6 +95,7 @@ model Authenticator {
 // setting model
 model Setting {
   id                      String   @id @default(cuid())
+  useStandardTime         Boolean  @default(false)
   standardStartWorkHour   Int?
   standardStartWorkMinute Int?
   standardEndWorkHour     Int?
@@ -102,12 +103,6 @@ model Setting {
   standardBreakHour       Int?
   standardBreakMinute     Int?
   defaultWorkDescription  String?
-  minimumWorkHour         Int?
-  minimumWorkMinute       Int?
-  standardWorkHour        Int?
-  standardWorkMinute      Int?
-  maximumWorkHour         Int?
-  maximumWorkMinute       Int?
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
   projectId               String   @unique
@@ -117,18 +112,24 @@ model Setting {
 
 // project model
 model Project {
-  id            String        @id @default(cuid())
-  title         String
-  description   String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  userId        String
-  selecterId    String?       @unique
-  createdBy     User          @relation("CreatedProjects", fields: [userId], references: [id], onDelete: Cascade)
-  activeProject User?         @relation("ActiveProject", fields: [selecterId], references: [id], onDelete: Cascade)
-  Task          Task[]
-  Setting       Setting?
-  DailyReport   DailyReport[]
+  id                 String        @id @default(cuid())
+  title              String
+  description        String?
+  minimumWorkHour    Int?
+  minimumWorkMinute  Int?
+  standardWorkHour   Int?
+  standardWorkMinute Int?
+  maximumWorkHour    Int?
+  maximumWorkMinute  Int?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  userId             String
+  selecterId         String?       @unique
+  createdBy          User          @relation("CreatedProjects", fields: [userId], references: [id], onDelete: Cascade)
+  activeProject      User?         @relation("ActiveProject", fields: [selecterId], references: [id], onDelete: Cascade)
+  Task               Task[]
+  Setting            Setting?
+  DailyReport        DailyReport[]
 }
 
 enum TaskStatus {

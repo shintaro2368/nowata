@@ -2,11 +2,10 @@
 
 import { auth } from "@/auth";
 import prisma from "@/db";
+import parseFiledErros from "@/validation/parseValidationError";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-
-import parseFiledErros from "@/validation/parseValidationError";
 
 const maxProjectSize: number = 10;
 const validationSchema = z.object({
@@ -34,7 +33,7 @@ async function initProjectAndSetting(
   title: string,
   description: string | undefined
 ) {
-  return await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx) => {
     const project = await prisma.project.create({
       data: {
         userId,
@@ -61,16 +60,13 @@ export async function createProject(prevState: any, formData: FormData) {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) {
-    return {
-      message: "Unauthorized",
-      error: {},
-    };
+    throw new Error("ログインしてください");
   }
 
   const count = await prisma.project.count({ where: { userId: userId } });
   if (count >= maxProjectSize) {
     return {
-      message: `プロジェクトは${maxProjectSize}件まで作成できます。`,
+      message: `プロジェクトは${maxProjectSize}件まで作成できます`,
       error: {},
     };
   }
@@ -82,7 +78,7 @@ export async function createProject(prevState: any, formData: FormData) {
   if (!validationFields.success) {
     console.warn("project", validationFields.data);
     return {
-      message: "入力内容に誤りがあります。入力内容をご確認ください。",
+      message: "入力内容に誤りがあります\n入力内容をご確認ください",
       error: parseFiledErros(validationFields.error),
     };
   }
@@ -99,9 +95,7 @@ export async function updataProject(prevState: any, formDate: FormData) {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) {
-    return {
-      message: "Unauthorized",
-    };
+    throw new Error("ログインしてください");
   }
 
   const project = await prisma.project.findUnique({
@@ -111,9 +105,7 @@ export async function updataProject(prevState: any, formDate: FormData) {
   });
 
   if (!project) {
-    return {
-      message: "Project not found",
-    };
+    throw new Error("プロジェクトが存在しません");
   }
 
   const validationFields = validationSchema.safeParse(
@@ -144,10 +136,10 @@ export async function updataProject(prevState: any, formDate: FormData) {
  * 選択中のプロジェクトがあれば解除し、新たな選択中のプロジェクトを設定します。
  * @param projectId プロジェクトID
  * @param userId ユーザーID
- * @returns
+ * @returns Promiseオブジェクト
  */
 async function subUpdateSelectProject(projectId: string, userId: string) {
-  return await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx) => {
     const oldSeldctProject = await prisma.project.findUnique({
       where: { selecterId: userId },
     });
@@ -173,11 +165,8 @@ async function subUpdateSelectProject(projectId: string, userId: string) {
 export async function updateSelectProject(projectId: string) {
   const session = await auth();
   const userId = session?.user?.id;
-
   if (!userId) {
-    return {
-      message: "Unauthorized",
-    };
+    throw new Error("ログインしてください。");
   }
 
   await subUpdateSelectProject(projectId, userId);

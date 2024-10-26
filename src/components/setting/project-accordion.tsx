@@ -4,10 +4,11 @@ import AccordionActions from "@mui/material/AccordionActions";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import Button from "@mui/material/Button";
+import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import { useEffect, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
+import HourAndMinutes from "../hour-minute";
 
 import { updataProject } from "@/actions/project-action";
 import { Project } from "@prisma/client";
@@ -22,14 +23,8 @@ function SubmitButton() {
 }
 
 export default function ProjectAccordion({ project }: { project: Project }) {
-  const [isChanged, setIsChanged] = useState(false);
   const [formState, action] = useFormState(updataProject, null);
-  // 保存処理が終了後にはボタンは消すようにするため
-  useEffect(() => {
-    if (isChanged) {
-      setIsChanged(false);
-    }
-  }, [project]);
+
   return (
     <form action={action}>
       <Accordion defaultExpanded>
@@ -38,6 +33,7 @@ export default function ProjectAccordion({ project }: { project: Project }) {
         </AccordionSummary>
         <AccordionDetails>
           <Stack spacing={2}>
+            <Divider>概要</Divider>
             <TextField
               name="title"
               required
@@ -45,11 +41,6 @@ export default function ProjectAccordion({ project }: { project: Project }) {
               defaultValue={project.title}
               error={!!formState?.error?.["title"]?.message}
               helperText={formState?.error?.["title"]?.message}
-              onChange={(e) => {
-                if (!isChanged) {
-                  setIsChanged(true);
-                }
-              }}
             />
             <TextField
               name="description"
@@ -59,15 +50,28 @@ export default function ProjectAccordion({ project }: { project: Project }) {
               defaultValue={project.description}
               error={!!formState?.error?.["description"]?.message}
               helperText={formState?.error?.["description"]?.message}
-              onChange={(e) => {
-                if (!isChanged) {
-                  setIsChanged(true);
-                }
-              }}
+            />
+            <Divider>稼働時間(月単位)</Divider>
+            <HourAndMinutes
+              label="標準"
+              hourName="stdWorkHour"
+              minuteNuame="stdWorkMinute"
+            />
+            <HourAndMinutes
+              label="最低"
+              hourName="minWorkHour"
+              minuteNuame="minWorkMinute"
+            />
+            <HourAndMinutes
+              label="最大"
+              hourName="maxWorkHour"
+              minuteNuame="maxWorkMinute"
             />
           </Stack>
         </AccordionDetails>
-        <AccordionActions>{isChanged && <SubmitButton />}</AccordionActions>
+        <AccordionActions>
+          <SubmitButton />
+        </AccordionActions>
       </Accordion>
     </form>
   );

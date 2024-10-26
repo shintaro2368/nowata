@@ -4,15 +4,16 @@ import React from "react";
 import { InputReport } from "./report-row";
 
 
-type TimeMaskProps = {handleOnAccept: (value: string) => void, value: string | undefined};
+type TimeMaskProps = {handleOnAccept: (value: string) => void, value: string | undefined, disabled: boolean};
 
-export default function TimeMask({value, handleOnAccept}: TimeMaskProps) {
+export default function TimeMask({value, handleOnAccept, disabled}: TimeMaskProps) {
   const ref = useRef(null);
   const inputRef = useRef(null);
   const [isError, setIsError] = useState(false);
 
   return (
     <IMaskInput
+      disabled={disabled}
       value={value}
       mask="HH:MM"
       blocks={{

@@ -51,13 +51,12 @@ export default function TaskForm({
   const error = formState?.error;
 
   return (
-    <Box component="div" padding={6}>
+    <Box component="div">
       <Box
         component="div"
         borderRadius={4}
-        width={700}
-        height="calc(100vh - 140px)"
-        sx={{ backgroundColor: grey[100] }}
+        height="auto"
+        sx={{ backgroundColor: "white" }}
       >
         <Box component="form" action={dispatch} method="POST" padding={2}>
           <Box component="div">
@@ -89,10 +88,15 @@ export default function TaskForm({
                 {icons.map((entry) => (
                   <Button
                     color="inherit"
+                    sx={{
+                      border: 1,
+                      borderColor: "rgba(0, 0, 0, 0.23)",
+                    }}
                     fullWidth
                     variant={
                       selectedStatus === entry.status ? "contained" : "outlined"
                     }
+                    
                     key={entry.status}
                     onClick={() => setSelectedStatus(entry.status)}
                   >

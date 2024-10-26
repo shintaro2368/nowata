@@ -22,11 +22,11 @@ export default function TaskGrid({
         container
         rowSpacing={2}
         columnSpacing={2}
-        maxWidth={1200}
-        margin={4}
+        // maxWidth={1200}
+        //margin={4}
       >
         {tasks.map((task) => (
-          <Grid item xs={4}>
+          <Grid item xs={4} key={task.id}>
             <TaskCard task={task} onClick={handleSetEditTask} />
           </Grid>
         ))}

@@ -11,7 +11,7 @@ import CardContent from "@mui/material/CardContent";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { Task } from "@prisma/client";
-import { useState, Fragment } from "react";
+import { Fragment, useState } from "react";
 import { SketchPicker } from "react-color";
 import ConfirmDeleteItem from "../confirm-delete-item";
 
@@ -41,12 +41,15 @@ export default function TaskCard({
       >
         <CardActionArea onClick={() => onClick(task)}>
           <CardContent sx={{ height: 400 }}>
-            <Typography variant="h4" noWrap>
+            <Typography variant="h4" noWrap borderBottom={1} gutterBottom paddingBottom={1}>
               {task.title}
             </Typography>
-            <Typography color="GrayText">
-              {task.createdAt.toLocaleDateString()}
-            </Typography>
+            <Box display="flex" alignItems="center" justifyContent="space-between">
+              <Typography>{task.status}</Typography>
+              <Typography color="GrayText">
+                {task.createdAt.toLocaleDateString()}
+              </Typography>
+            </Box>
             <Typography
               variant="body2"
               sx={{ whiteSpace: "pre-wrap" }}
@@ -74,6 +77,7 @@ export default function TaskCard({
             >
               <ColorLensIcon />
             </Box>
+
             <Stack direction="row" spacing={1}>
               {task.Work.length === 0 ? (
                 <Button

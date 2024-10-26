@@ -1,7 +1,8 @@
+import theme from "@/theme";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
+import { ThemeProvider } from "@mui/material/styles";
 import type { Metadata } from "next";
 import { Zen_Maru_Gothic } from "next/font/google";
-
 import "./globals.css";
 
 const inter = Zen_Maru_Gothic({ weight: "400", subsets: ["latin"] });
@@ -18,8 +19,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body className={inter.className}>
-        <AppRouterCacheProvider>{children}</AppRouterCacheProvider>
+      <body className={`${inter.className}`}>
+        <AppRouterCacheProvider>
+          <ThemeProvider theme={theme}>{children}</ThemeProvider>
+        </AppRouterCacheProvider>
       </body>
     </html>
   );
