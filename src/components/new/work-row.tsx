@@ -14,6 +14,13 @@ import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import { Fragment, useState } from "react";
 
+function fmtTotalWorkTime(totalWorkTime: number): string {
+  const hour = Math.floor(totalWorkTime / 60);
+  const minute = totalWorkTime % 60;
+
+  return `${hour.toString()}時間${minute.toString()}分`;
+}
+
 export default function WorkRow({ task }: { task: TaskAndWorks }) {
   const [open, setOpen] = useState(false);
 
@@ -54,7 +61,7 @@ export default function WorkRow({ task }: { task: TaskAndWorks }) {
                         </TableCell>
                         <TableCell>
                           {work.totalTime
-                            ? work.totalTime.toLocaleString()
+                            ? fmtTotalWorkTime(work.totalTime)
                             : "-"}
                         </TableCell>
                       </TableRow>

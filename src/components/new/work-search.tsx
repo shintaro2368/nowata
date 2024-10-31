@@ -9,9 +9,8 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { TaskStatus } from "@prisma/client";
-import dayjs from "dayjs";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import DatePickerProvider from "../date-picker-provider";
 
 export default function WorkSearch() {
@@ -21,6 +20,18 @@ export default function WorkSearch() {
   const urlSearchParams = useRef<URLSearchParams>(
     new URLSearchParams(searchParams)
   );
+
+  const [selectedStatus, setSelectedStatus] = useState<TaskStatus[]>([]);
+
+  // ステータスの選択(スタイル)の反英
+  function handleSetSelectedStatus(status: TaskStatus) {
+    if (selectedStatus.includes(status)) {
+      const newStatus = selectedStatus.filter((s) => s !== status);
+      setSelectedStatus(newStatus);
+    } else {
+      setSelectedStatus((prev) => [...prev, status]);
+    }
+  }
 
   function handleChangeStatuses(status: TaskStatus) {
     if (urlSearchParams.current.has("statuses", status)) {
@@ -51,7 +62,6 @@ export default function WorkSearch() {
               <TextField
                 label="タスク"
                 variant="standard"
-                defaultValue={urlSearchParams.current.get("title")?.toString()}
                 onChange={(e) => {
                   handleChangeQueryParameter("title", e.target.value);
                 }}
@@ -62,10 +72,14 @@ export default function WorkSearch() {
                 {Object.values(TaskStatus).map((value) => (
                   <Button
                     sx={{ borderColor: grey[500] }}
-                    color="inherit"
+                    variant={
+                      selectedStatus.includes(value) ? "contained" : "outlined"
+                    }
+                    color={selectedStatus.includes(value) ? "info" : "inherit"}
                     key={value}
                     onClick={() => {
                       handleChangeStatuses(value);
+                      handleSetSelectedStatus(value);
                     }}
                   >
                     {value}
@@ -76,22 +90,15 @@ export default function WorkSearch() {
 
             <DatePickerProvider>
               <DatePicker
-                defaultValue={dayjs(
-                  urlSearchParams.current.get("from") || undefined
-                )}
                 label="稼働期間(開始)"
                 slotProps={{ textField: { variant: "standard" } }}
                 onChange={(value) => {
                   const dateStr = value?.format("YYYY-MM-DD") || "";
-                  console.log(dateStr);
                   handleChangeQueryParameter("from", dateStr);
                 }}
               />
               <span>-</span>
               <DatePicker
-                defaultValue={dayjs(
-                  urlSearchParams.current.get("to") || undefined
-                )}
                 label="稼働期間(終了)"
                 slotProps={{ textField: { variant: "standard" } }}
                 onChange={(value) => {
@@ -106,6 +113,7 @@ export default function WorkSearch() {
               startIcon={<SearchIcon />}
               variant="contained"
               onClick={handleSearch}
+              className="mr-3"
             >
               検索
             </Button>

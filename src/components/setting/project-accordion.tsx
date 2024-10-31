@@ -1,3 +1,4 @@
+import { updataProject } from "@/actions/project-action";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Accordion from "@mui/material/Accordion";
 import AccordionActions from "@mui/material/AccordionActions";
@@ -7,11 +8,9 @@ import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
+import { Project } from "@prisma/client";
 import { useFormState, useFormStatus } from "react-dom";
 import HourAndMinutes from "../hour-minute";
-
-import { updataProject } from "@/actions/project-action";
-import { Project } from "@prisma/client";
 
 function SubmitButton() {
   const status = useFormStatus();
@@ -24,7 +23,7 @@ function SubmitButton() {
 
 export default function ProjectAccordion({ project }: { project: Project }) {
   const [formState, action] = useFormState(updataProject, null);
-
+  console.warn(project);
   return (
     <form action={action}>
       <Accordion defaultExpanded>
@@ -32,6 +31,7 @@ export default function ProjectAccordion({ project }: { project: Project }) {
           プロジェクト
         </AccordionSummary>
         <AccordionDetails>
+          <label className="text-gray-600 text-sm">他のプロジェクトと設定内容は共有されません</label>
           <Stack spacing={2}>
             <Divider>概要</Divider>
             <TextField
@@ -54,18 +54,24 @@ export default function ProjectAccordion({ project }: { project: Project }) {
             <Divider>稼働時間(月単位)</Divider>
             <HourAndMinutes
               label="標準"
-              hourName="stdWorkHour"
-              minuteNuame="stdWorkMinute"
+              hourName="standardWorkHour"
+              minuteNuame="standardWorkMinute"
+              defaultHour={project.standardWorkHour}
+              defaultMinute={project.standardWorkMinute}
             />
             <HourAndMinutes
               label="最低"
-              hourName="minWorkHour"
-              minuteNuame="minWorkMinute"
+              hourName="minimumWorkHour"
+              minuteNuame="minimumWorkMinute"
+              defaultHour={project.minimumWorkHour}
+              defaultMinute={project.minimumWorkMinute}
             />
             <HourAndMinutes
               label="最大"
-              hourName="maxWorkHour"
-              minuteNuame="maxWorkMinute"
+              hourName="maximumWorkHour"
+              minuteNuame="maximumWorkMinute"
+              defaultHour={project.maximumWorkHour}
+              defaultMinute={project.maximumWorkMinute}
             />
           </Stack>
         </AccordionDetails>

@@ -2,6 +2,7 @@
 
 import { auth } from "@/auth";
 import prisma from "@/db";
+import { hourValidation, minuteValidation } from "@/lib/validation";
 import parseFiledErros from "@/validation/parseValidationError";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -19,6 +20,12 @@ const validationSchema = z.object({
     .trim()
     .max(200, "200文字以内で入力してください")
     .optional(),
+  minimumWorkHour: hourValidation.optional(),
+  minimumWorkMinute: minuteValidation.optional(),
+  standardWorkHour: hourValidation.optional(),
+  standardWorkMinute: minuteValidation.optional(),
+  maximumWorkHour: hourValidation.optional(),
+  maximumWorkMinute: minuteValidation.optional(),
 });
 
 /**
@@ -119,7 +126,16 @@ export async function updataProject(prevState: any, formDate: FormData) {
     };
   }
 
-  const { title, description } = validationFields.data;
+  const {
+    title,
+    description,
+    minimumWorkHour,
+    minimumWorkMinute,
+    standardWorkHour,
+    standardWorkMinute,
+    maximumWorkHour,
+    maximumWorkMinute,
+  } = validationFields.data;
   await prisma.project.update({
     where: {
       id: project.id,
@@ -127,6 +143,12 @@ export async function updataProject(prevState: any, formDate: FormData) {
     data: {
       title,
       description,
+      minimumWorkHour,
+      minimumWorkMinute,
+      standardWorkHour,
+      standardWorkMinute,
+      maximumWorkHour,
+      maximumWorkMinute,
     },
   });
   revalidatePath("/settings");

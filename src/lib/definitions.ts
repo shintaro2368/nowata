@@ -1,13 +1,11 @@
 import { TaskStatus, WorkStyle } from "@prisma/client";
 
-export type TaskAndWorksQuery =
-  | {
-      title?: string;
-      statuses?: TaskStatus[];
-      from?: Date;
-      to?: Date;
-    }
-  | undefined;
+export type TaskAndWorksQuery = {
+  title?: string;
+  statuses?: TaskStatus[];
+  from?: Date;
+  to?: Date;
+};
 
 export type PDFReport = {
   id: string | undefined;

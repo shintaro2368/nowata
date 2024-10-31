@@ -9,8 +9,8 @@ type HourAndMinuteProps = {
   minuteNuame: string;
   hourAdorment?: string;
   minuteAdorment?: string;
-  defaultHour?: unknown;
-  defaultMinute?: unknown;
+  defaultHour?: number | null;
+  defaultMinute?: number | null;
 };
 
 export default function HourAndMinutes({
@@ -22,15 +22,15 @@ export default function HourAndMinutes({
   defaultHour,
   defaultMinute
 }: HourAndMinuteProps) {
-  const [hour, setHour] = useState("");
-  const [minute, setMinute] = useState("");
+  const [hour, setHour] = useState(defaultHour == null ? "" : defaultHour.toString());
+  const [minute, setMinute] = useState(defaultMinute == null ? "" : defaultMinute.toString());
   return (
     <Stack spacing={1}>
       <label>{label}</label>
       <Stack direction="row" spacing={1}>
         <TextField
           inputProps={{ style: { textAlign: "right" } }}
-          defaultValue={defaultHour}
+          //defaultValue={defaultHour}
           name={hourName}
           value={hour}
           InputProps={{
@@ -50,7 +50,7 @@ export default function HourAndMinutes({
         />
         <TextField
           inputProps={{ style: { textAlign: "right" } }}
-          defaultValue={defaultMinute}
+          //defaultValue={defaultMinute}
           name={minuteNuame}
           value={minute}
           InputProps={{

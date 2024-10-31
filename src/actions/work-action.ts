@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import prisma from "@/db";
-import { TaskStatus } from "@prisma/client";
+import { TaskStatus,Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 export type WorkSearchProp = {
@@ -88,6 +88,7 @@ export async function searchWork(param: WorkSearchProp) {
       title: {
         contains: taskTitle ? taskTitle : undefined,
       },
+      OR: status?.map(status => ({status})),
       project: {
         selecterId: userId,
       },

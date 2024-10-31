@@ -69,7 +69,9 @@ export default function WorkAccordion({ setting }: { setting: Setting }) {
             </Stack>
           </DatePickerProvider>
         </AccordionDetails>
-        <AccordionActions><SubmitButton/></AccordionActions>
+        <AccordionActions>
+          <SubmitButton />
+        </AccordionActions>
       </Accordion>
     </form>
   );
