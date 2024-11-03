@@ -1,5 +1,5 @@
 "use client";
-import { endWork, startWork } from "@/actions/daily-report-action";
+import { attendance, leave } from "@/actions/daily-report-action";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -25,7 +25,7 @@ export default function AttendanceForm({ isWorking }: { isWorking: boolean }) {
   };
 
   const handleOnClick = async () => {
-    isWorking ? await endWork(pathname) : await startWork(pathname);
+    isWorking ? await leave(pathname) : await attendance();
     setState({
       open: true,
       message: isWorking

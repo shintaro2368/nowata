@@ -1,8 +1,10 @@
 "use client";
 
 import { createProject, updateSelectProject } from "@/actions/project-action";
+import { projectValidation } from "@/lib/validation";
+import { useForm } from "@conform-to/react";
+import { parseWithZod } from "@conform-to/zod";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CheckBox from "@mui/material/Checkbox";
@@ -15,7 +17,7 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { Fragment,useState } from "react";
+import { Fragment, useState } from "react";
 import { useFormState } from "react-dom";
 
 export default function ProjectForm({
@@ -33,15 +35,37 @@ export default function ProjectForm({
   );
   const [open, setOpen] = useState(false);
   const [openCreateProejct, setOpenCreateProject] = useState(false);
-  const [formState, dispatch] = useFormState(createProject, null);
+  const [lastResult, action] = useFormState(createProject, undefined);
+  const [form, fields] = useForm({
+    lastResult,
 
-  const handleClose = () => {
+    onValidate({ formData }) {
+      return parseWithZod(formData, { schema: projectValidation });
+    },
+    onSubmit(e, { submission }) {
+      if (submission?.status !== "error") {
+        handleAutoCloseCreateProject();
+      }
+    },
+
+    shouldValidate: "onBlur",
+    shouldRevalidate: "onInput",
+  });
+
+  function handleClose() {
     setOpen(false);
-  };
+  }
 
-  const handleCloseCreateProject = () => {
+  function handleAutoCloseCreateProject() {
+    console.log("called");
+    if (form.status !== "error") {
+      setOpenCreateProject(false);
+    }
+  }
+
+  function handleCloseCreateProject() {
     setOpenCreateProject(false);
-  };
+  }
 
   const handleSelectProject = (projectId: string) => {
     setSelectedProject(projects.find((project) => project.id === projectId));
@@ -57,20 +81,27 @@ export default function ProjectForm({
         className="rounded-sm px-1 my-1 mx-2 w-fit cursor-pointer"
         onClick={() => setOpen(true)}
       >
-        <Button endIcon={<ArrowDropDownIcon fontSize="large"/>} color="inherit" sx={{fontSize: "1.1em"}}>
-          {projects.find((project) => project.checked)?.name ?? "プロジェクトを作成してください"}
-          {/* <ArrowDropDownIcon fontSize="medium" /> */}
+        <Button
+          endIcon={<ArrowDropDownIcon fontSize="large" />}
+          color="inherit"
+          sx={{ fontSize: "1.1em" }}
+        >
+          {projects.find((project) => project.checked)?.name ??
+            "プロジェクトを選択してください"}
         </Button>
       </div>
       <Dialog open={open} onClose={handleClose} fullWidth>
         <DialogTitle>プロジェクトを選択</DialogTitle>
         <DialogContent>
           <div>
-            <div className="flex justify-end">
+            <div className="flex justify-end mb-2">
               <Button onClick={() => setOpenCreateProject(true)}>
                 新しいプロジェクトを作成
               </Button>
             </div>
+            <Typography variant="caption" gutterBottom>
+              プロジェクトを切り替えると、作業中のタスクは全て終了になります
+            </Typography>
             {projects.length > 0 ? (
               <Stack>
                 {projects.map((project) => (
@@ -88,7 +119,7 @@ export default function ProjectForm({
                     <Typography variant="body2" marginLeft={4} marginBottom={2}>
                       {project.description}
                     </Typography>
-                    <Divider/>
+                    <Divider />
                   </Box>
                 ))}
               </Stack>
@@ -117,35 +148,36 @@ export default function ProjectForm({
         fullWidth
       >
         <DialogTitle>プロジェクトの作成</DialogTitle>
-        <Box component="form" action={dispatch}>
+        <Box
+          component="form"
+          id={form.id}
+          onSubmit={form.onSubmit}
+          action={action}
+          noValidate
+        >
           <DialogContent>
             <Stack spacing={3}>
-              {formState?.message && (
-                <Alert severity="error">{formState.message}</Alert>
-              )}
               <TextField
-                name="title"
+                key={fields.title.key}
+                name={fields.title.name}
                 required
                 label="タイトル"
-                error={!!formState?.error?.["title"]}
-                helperText={formState?.error?.["title"]?.message}
+                error={!!fields.title.errors}
+                helperText={fields.title.errors}
               />
               <TextField
-                name="description"
+                name={fields.description.name}
+                key={fields.description.key}
                 multiline
                 rows={5}
                 label="概要"
-                error={!!formState?.error?.["description"]}
-                helperText={formState?.error?.["description"]?.message}
+                error={!!fields.description.errors}
+                helperText={fields.description.errors}
               />
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button
-              variant="contained"
-              type="submit"
-              onClick={handleCloseCreateProject}
-            >
+            <Button variant="contained" type="submit">
               作成
             </Button>
             <Button variant="outlined" onClick={handleCloseCreateProject}>

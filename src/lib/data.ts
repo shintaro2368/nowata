@@ -10,7 +10,7 @@ export async function fetchFilterdTaskAndWorks(
   if (!userId) {
     throw new Error("ログインをしてください");
   }
-  console.debug(taskAndWorksQuery)
+  console.debug(taskAndWorksQuery);
   const data = await prisma.task.findMany({
     where: {
       project: {
@@ -18,16 +18,20 @@ export async function fetchFilterdTaskAndWorks(
       },
       title: {
         contains: taskAndWorksQuery?.title,
+        mode: "insensitive",
       },
-      OR: taskAndWorksQuery.statuses?.map(status => ({status})),
+      OR: taskAndWorksQuery.statuses?.map((status) => ({ status })),
       Work: {
         some: {
-          AND:[{startAt: {lte: taskAndWorksQuery.to}},{endAt: {gte: taskAndWorksQuery.from}}]
-        }
-      }
+          AND: [
+            { startAt: { lte: taskAndWorksQuery.to } },
+            { endAt: { gte: taskAndWorksQuery.from } },
+          ],
+        },
+      },
     },
     include: {
-      Work: true,
+      Work: { orderBy: { startAt: "desc" } },
     },
     orderBy: {
       createdAt: "desc",

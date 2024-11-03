@@ -2,7 +2,9 @@
 
 import { auth } from "@/auth";
 import prisma from "@/db";
-import { TaskStatus,Prisma } from "@prisma/client";
+import { workDescriptionValidation } from "@/lib/validation";
+import { parseWithZod } from "@conform-to/zod";
+import { TaskStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 export type WorkSearchProp = {
@@ -11,6 +13,7 @@ export type WorkSearchProp = {
   to: Date | undefined;
   status: TaskStatus[] | undefined;
 };
+
 
 export async function startWork(taskId: string) {
   const session = await auth();
@@ -88,7 +91,7 @@ export async function searchWork(param: WorkSearchProp) {
       title: {
         contains: taskTitle ? taskTitle : undefined,
       },
-      OR: status?.map(status => ({status})),
+      OR: status?.map((status) => ({ status })),
       project: {
         selecterId: userId,
       },
@@ -102,4 +105,28 @@ export async function searchWork(param: WorkSearchProp) {
   });
 
   return tasks;
+}
+
+export async function editDescirption(prevState: unknown, formDate: FormData) {
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  if (!userId) {
+    throw new Error("ログインをしてください");
+  }
+
+  const submission = await parseWithZod(formDate, {
+    schema: workDescriptionValidation,
+    async: true,
+  });
+
+  if (submission.status !== "success") {
+    return submission.reply();
+  }
+
+  const { id, description } = submission.value;
+  await prisma.work.update({
+    where: { id, task: { project: { selecterId: userId } } },
+    data: { description },
+  });
 }

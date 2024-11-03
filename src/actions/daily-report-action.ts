@@ -2,11 +2,14 @@
 
 import { auth } from "@/auth";
 import prisma from "@/db";
-import { PDFReport, displayWorkStyle } from "@/lib/definitions";
+import { PDFReport } from "@/lib/definitions";
+import { minutesBetween } from "@/lib/time";
+import { Prisma } from "@prisma/client";
 import dayjs from "dayjs";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
-export async function startWork(pathname: string) {
+export async function attendance() {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) {
@@ -46,41 +49,115 @@ export async function startWork(pathname: string) {
     },
   });
 
-  revalidatePath(pathname);
+  //revalidatePath(pathname);
+  redirect("/dashboard");
 }
 
-export async function endWork(pathname: string) {
+export async function leave(pathname: string) {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) {
     throw new Error("ログインをしてください");
   }
 
-  const latestWork = await prisma.dailyReport.findFirst({
-    where: {
-      userId,
-      endAt: null,
-    },
-    orderBy: {
-      startAt: "desc",
-    },
+  await prisma.$transaction(async (tx) => {
+    // 出勤データを取得
+    const latestWork = await tx.dailyReport.findFirst({
+      where: {
+        userId,
+        endAt: null,
+        NOT: [{startAt: null}]
+      },
+      orderBy: {
+        startAt: "desc",
+      },
+    });
+
+    if (!latestWork) {
+      throw new Error("退勤を行うには、出勤を行ってください");
+    }
+
+    const now = dayjs().add(9, "hour").toDate();
+    // 退勤処理を行う
+    // 出勤時刻と退勤時刻から勤務時間の計算を行う
+    const diff = minutesBetween(latestWork.startAt!, now);
+    await tx.dailyReport.update({
+      where: {
+        id: latestWork.id,
+      },
+      data: {
+        endAt: now,
+        workTimeHour: Math.floor(diff / 60),
+        workTimeMinute: diff % 60,
+      },
+    });
+
+    // アクティブなプロジェクトに紐づく作業を全て終了させる
+    const notEndWorks = await tx.work.findMany({
+      where: { task: { project: { selecterId: userId } }, endAt: null },
+    });
+    if (notEndWorks.length > 0) {
+      await Promise.all(
+        notEndWorks.map(async (work) => {
+          return tx.work.update({
+            where: { id: work.id },
+            data: { endAt: now, totalTime: minutesBetween(work.startAt, now) },
+          });
+        })
+      );
+    }
+
+    // プロジェクトを非アクティブにする
+    try {
+      await tx.project.update({
+        where: { selecterId: userId },
+        data: { selecterId: null },
+      });
+    } catch (e) {
+      // Updateするレコードがないときに発生するエラーであれば正常とする
+      // この方法は公式Docが提示しているので、正攻法なのだろう
+      if (
+        !(
+          e instanceof Prisma.PrismaClientKnownRequestError &&
+          e.code === "P2025"
+        )
+      ) {
+        console.error("Error while updating project", e);
+        throw new Error();
+      }
+    }
   });
 
-  if (!latestWork) {
-    throw new Error("終了するタスクがありません");
+  revalidatePath(pathname);
+}
+
+export async function cancelLeave(pathname: string) {
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  if (!userId) {
+    throw new Error("ログインをしてください");
   }
 
-  const endAt = dayjs().add(9, "hour");
-  const diff = endAt.diff(dayjs(latestWork.startAt), "minute");
+  const lastReport = await prisma.dailyReport.findFirst({
+    where: { userId, NOT: [{startAt: null}] },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (!lastReport) throw new Error("出勤をされていません");
+  if (!lastReport.endAt)
+    throw new Error("退勤はされていません\n引き続き勤務を行うことができます");
+
+  const today = dayjs().startOf("d").add(9, "hour").toDate();
+  if (!dayjs(lastReport.date).isSame(today))
+    throw new Error(
+      "同日の場合に限り、退勤の取消ができます\n新たに出勤を行ってください"
+    );
+
+  // 退勤時刻を取り消す
   await prisma.dailyReport.update({
-    where: {
-      id: latestWork.id,
-    },
-    data: {
-      endAt: dayjs().add(9, "hour").toDate(),
-      workTimeHour: Math.floor(diff / 60),
-      workTimeMinute: diff % 60,
-    },
+    where: { id: lastReport.id },
+    data: { endAt: null },
   });
 
   revalidatePath(pathname);
@@ -118,7 +195,7 @@ export async function update(pdfReports: PDFReport[]) {
   if (!userId) {
     throw new Error("ログインをしてください");
   }
-  
+
   const promises = pdfReports.map(async (pdfReoprt) => {
     const { id, date, start, end, breakTime, description } = pdfReoprt;
     const report = await prisma.dailyReport.findUnique({ where: { id } });
@@ -128,7 +205,7 @@ export async function update(pdfReports: PDFReport[]) {
         "一部のデータがすでに削除されています\nページを再読み込み後再度操作してください。"
       );
     }
-    
+
     const startAt = fmtTimeToDate(date, start);
     const endAt = fmtTimeToDate(date, end);
     let workTimeHour = 0;
@@ -139,7 +216,7 @@ export async function update(pdfReports: PDFReport[]) {
       workTimeMinute = diff % 60;
     }
     const [breakTimeHour, breakTimeMinute] = fmtTimeToHourMinute(breakTime);
-    if(pdfReoprt.id) {
+    if (pdfReoprt.id) {
       await prisma.dailyReport.update({
         where: {
           id,

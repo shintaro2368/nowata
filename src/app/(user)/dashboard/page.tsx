@@ -1,11 +1,12 @@
 import { auth } from "@/auth";
 import LineCharts from "@/components/line-charts";
-import CustomPieChart from "@/components/pie-chart";
 import prisma from "@/db";
+import { minutesToHoursMinutes } from "@/lib/time";
 import Box from "@mui/material/Box";
 import grey from "@mui/material/colors/grey";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
+import dayjs from "dayjs";
 import { redirect } from "next/navigation";
 
 export default async function DashbordPage() {
@@ -17,9 +18,6 @@ export default async function DashbordPage() {
 
   const project = await prisma.project.findUnique({
     where: { selecterId: userId },
-  });
-  const runningDailyReport = await prisma.dailyReport.findFirst({
-    where: { userId, endAt: null },
   });
 
   // すべてのタスク数
@@ -42,28 +40,22 @@ export default async function DashbordPage() {
     where: { projectId: project?.id, status: "TODO" },
   });
 
+  const startOfMonth = dayjs().startOf("M").add(9, "hour").toDate();
+  const endOfMonth = dayjs().endOf("M").add(9, "hour").toDate();
   const reports = await prisma.dailyReport.findMany({
-    where: { userId },
+    where: { userId, date: { gte: startOfMonth, lte: endOfMonth } },
     orderBy: { date: "asc" },
   });
 
-  const getProgressCircleData = () => {
-    const data = [
-      { value: doneTaskSize, label: "完了", color: "#3182ce" },
-      { value: todoTask + doingTaskSize, label: "未完了", color: "gray" },
-    ];
-
-    const details = [
-      { value: doingTaskSize, label: "仕掛り中", color: "red" },
-      { value: todoTask, label: "登録済み", color: "gray" },
-    ];
-
-    return { data, details };
-  };
+  let sumWorkMinutes = 0;
+  reports.forEach(
+    (report) =>
+      (sumWorkMinutes += report.workTimeHour * 60 + report.workTimeMinute)
+  );
 
   return (
-    <Grid container maxWidth={1200} spacing={3} rowSpacing={2} height="100%">
-      <Grid item xs={6} height="15%">
+    <Grid container spacing={3} rowSpacing={2} padding={2} maxWidth={1200}>
+      <Grid item xs={6} height={200}>
         <Box
           bgcolor="#fff"
           borderRadius={4}
@@ -81,12 +73,12 @@ export default async function DashbordPage() {
           >
             達成率
           </Typography>
-          <Typography variant="h2" fontWeight={500}>
-            {doneTaskSize}
+          <Typography variant="h2" fontWeight={500} align="center">
+            {`${Math.floor((doneTaskSize / taskSize) * 100)}%`}
           </Typography>
         </Box>
       </Grid>
-      <Grid item xs={6} height="15%">
+      <Grid item xs={6} height={200}>
         <Box
           bgcolor="#fff"
           borderRadius={4}
@@ -104,12 +96,12 @@ export default async function DashbordPage() {
           >
             今月の稼働時間
           </Typography>
-          <Typography variant="h2" fontWeight={500}>
-            {121}H
+          <Typography variant="h2" fontWeight={500} align="center">
+            {minutesToHoursMinutes(sumWorkMinutes)}
           </Typography>
         </Box>
       </Grid>
-      <Grid item xs={4} height="15%">
+      <Grid item xs={4} height={200}>
         <Box
           bgcolor="#fff"
           borderRadius={4}
@@ -127,12 +119,12 @@ export default async function DashbordPage() {
           >
             TODO
           </Typography>
-          <Typography variant="h2" fontWeight={500}>
+          <Typography variant="h2" fontWeight={500} align="center">
             {todoTask}
           </Typography>
         </Box>
       </Grid>
-      <Grid item xs={4} height="15%">
+      <Grid item xs={4} height={200}>
         <Box
           bgcolor="#fff"
           borderRadius={4}
@@ -150,12 +142,12 @@ export default async function DashbordPage() {
           >
             DOING
           </Typography>
-          <Typography variant="h2" fontWeight={500}>
+          <Typography variant="h2" fontWeight={500} align="center">
             {doingTaskSize}
           </Typography>
         </Box>
       </Grid>
-      <Grid item xs={4} height="15%">
+      <Grid item xs={4} height={200}>
         <Box
           bgcolor="#fff"
           borderRadius={4}
@@ -173,19 +165,29 @@ export default async function DashbordPage() {
           >
             DONE
           </Typography>
-          <Typography variant="h2" fontWeight={500}>
+          <Typography variant="h2" fontWeight={500} align="center">
             {doneTaskSize}
           </Typography>
         </Box>
       </Grid>
-      <Grid item xs={12} height="30%">
-        <Box height="100%" bgcolor={grey[100]}>
-          <LineCharts reports={reports} />
-        </Box>
-      </Grid>
-      <Grid item xs={4}>
-        <Box>
-          <CustomPieChart {...getProgressCircleData()} />
+      <Grid item xs={12} height={500}>
+        <Box
+          height="100%"
+          bgcolor="#fff"
+          padding={1}
+          borderRadius={4}
+          borderColor={grey[200]}
+          sx={{ borderWidth: 3 }}
+        >
+          <Typography
+            variant="h4"
+            color={grey[700]}
+            align="center"
+            fontSize="1.1em"
+          >
+            稼働時間の推移
+          </Typography>
+          <LineCharts reports={reports} project={project} />
         </Box>
       </Grid>
     </Grid>

@@ -1,5 +1,7 @@
 "use client";
 
+import { TaskAndWorksQuery } from "@/lib/definitions";
+import { minutesToHoursMinutes } from "@/lib/time";
 import TaskAndWorks from "@/types/task-and-works";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
@@ -13,16 +15,18 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import { Fragment, useState } from "react";
+import WorkDetail from "./work-detail";
 
-function fmtTotalWorkTime(totalWorkTime: number): string {
-  const hour = Math.floor(totalWorkTime / 60);
-  const minute = totalWorkTime % 60;
-
-  return `${hour.toString()}時間${minute.toString()}分`;
-}
-
-export default function WorkRow({ task }: { task: TaskAndWorks }) {
+export default function WorkRow({
+  task
+}: {
+  task: TaskAndWorks;
+}) {
   const [open, setOpen] = useState(false);
+  let totalWorkTime = 0;
+  task.Work.forEach(
+    (work) => (totalWorkTime += work.totalTime ? work.totalTime : 0)
+  );
 
   return (
     <Fragment key={task.id}>
@@ -34,7 +38,9 @@ export default function WorkRow({ task }: { task: TaskAndWorks }) {
         </TableCell>
         <TableCell title={task.title}>{task.title}</TableCell>
         <TableCell title={task.description ?? ""}>{task.description}</TableCell>
-        <TableCell align="right">20</TableCell>
+        <TableCell align="right">
+          {minutesToHoursMinutes(totalWorkTime)}
+        </TableCell>
       </TableRow>
       <TableRow>
         <TableCell colSpan={4} style={{ paddingTop: 0, paddingBottom: 0 }}>
@@ -47,24 +53,27 @@ export default function WorkRow({ task }: { task: TaskAndWorks }) {
                 <Table size="small">
                   <TableHead>
                     <TableRow>
-                      <TableCell>開始</TableCell>
-                      <TableCell>終了</TableCell>
-                      <TableCell>作業時間(h)</TableCell>
+                      <TableCell align="center" width="20%" className="p-0">
+                        <p className="bg-gray-100 m-1 p-2 rounded-lg">開始</p>
+                      </TableCell>
+                      <TableCell align="center" width="20%" className="p-0">
+                        <p className="bg-gray-100 m-1 p-2 rounded-lg">終了</p>
+                      </TableCell>
+                      <TableCell align="center" className="p-0">
+                        <p className="bg-gray-100 m-1 p-2 rounded-lg">
+                          コメント
+                        </p>
+                      </TableCell>
+                      <TableCell align="center" width="15%" className="p-0">
+                        <p className="bg-gray-100 m-1 p-2 rounded-lg">
+                          作業時間
+                        </p>
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {task.Work.map((work) => (
-                      <TableRow key={work.id}>
-                        <TableCell>{work.startAt.toLocaleString()}</TableCell>
-                        <TableCell>
-                          {work?.endAt ? work.endAt.toLocaleString() : "-"}
-                        </TableCell>
-                        <TableCell>
-                          {work.totalTime
-                            ? fmtTotalWorkTime(work.totalTime)
-                            : "-"}
-                        </TableCell>
-                      </TableRow>
+                      <WorkDetail work={work} />
                     ))}
                   </TableBody>
                 </Table>
