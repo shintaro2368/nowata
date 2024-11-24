@@ -1,6 +1,5 @@
 "use client";
 
-import { TaskAndWorksQuery } from "@/lib/definitions";
 import { minutesToHoursMinutes } from "@/lib/time";
 import TaskAndWorks from "@/types/task-and-works";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -17,11 +16,7 @@ import Typography from "@mui/material/Typography";
 import { Fragment, useState } from "react";
 import WorkDetail from "./work-detail";
 
-export default function WorkRow({
-  task
-}: {
-  task: TaskAndWorks;
-}) {
+export default function WorkRow({ task }: { task: TaskAndWorks }) {
   const [open, setOpen] = useState(false);
   let totalWorkTime = 0;
   task.Work.forEach(

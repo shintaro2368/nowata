@@ -46,6 +46,16 @@ const validationSchema = z.object({
     .optional(),
 });
 
+export async function createSetting() {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) {
+    throw new Error("ログインしてください");
+  }
+
+  return await prisma.setting.create({ data: { userId } });
+}
+
 export async function updataSetting(prevState: any, formData: FormData) {
   const session = await auth();
   const useId = session?.user?.id;

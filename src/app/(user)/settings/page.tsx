@@ -1,3 +1,4 @@
+import { createSetting } from "@/actions/setting-action";
 import { auth } from "@/auth";
 import SettingsForm from "@/components/settings-form";
 import prisma from "@/db";
@@ -6,12 +7,16 @@ export default async function SettingsPage() {
   const session = await auth();
   const user = session?.user;
   if (!user?.id) {
-    return;
+    throw new Error("ログインしてください");
   }
 
   const project = await prisma.project.findUnique({
     where: { selecterId: user.id },
-    include: { Setting: true },
+  });
+
+  let setting;
+  setting = await prisma.setting.findUnique({
+    where: { userId: user.id },
   });
 
   if (!project) {
@@ -19,6 +24,9 @@ export default async function SettingsPage() {
     return;
   }
 
-  const setting = project.Setting!!;
+  if (!setting) {
+    setting = await createSetting();
+  }
+
   return <SettingsForm settingFormProps={{ user, project, setting }} />;
 }

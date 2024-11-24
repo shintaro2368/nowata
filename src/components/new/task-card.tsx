@@ -1,6 +1,6 @@
-import { deleteTask, updateCardBgColor } from "@/actions/task-action";
+import { updateCardBgColor } from "@/actions/task-action";
 import { startWork, stopWork } from "@/actions/work-action";
-import TaskAndWorks from "@/types/task-and-works";
+import { attendanceAtom, editTaskAtom, displayTaskFormAtom } from "@/state";
 import ColorLensIcon from "@mui/icons-material/ColorLens";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -10,44 +10,61 @@ import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { Task } from "@prisma/client";
+import { SubTask, Task, Work } from "@prisma/client";
+import { useAtomValue, useSetAtom } from "jotai";
 import { Fragment, useState } from "react";
 import { SketchPicker } from "react-color";
-import ConfirmDeleteItem from "../confirm-delete-item";
 
 export default function TaskCard({
   task,
-  onClick,
 }: {
-  task: TaskAndWorks;
-  onClick: (task: Task) => void;
+  task: Task & { Work: Work[]; SubTask: SubTask[] };
 }) {
   const [displayColorPicker, setDisplayColorPicker] = useState(false);
-  const [displayConfirmDelete, setDisplayConfirmDelete] = useState(false);
-  const [color, setColor] = useState(
-    task.cardBgColor ? task.cardBgColor : "#fff"
-  );
+  const [cardBgColor, setcardBgColor] = useState(task.cardBgColor ?? "#fff");
 
   const handleClosePicker = async (taskId: string) => {
-    await updateCardBgColor(taskId, color);
+    await updateCardBgColor(taskId, cardBgColor);
     setDisplayColorPicker((prev) => !prev);
   };
+
+  const attendanceState = useAtomValue(attendanceAtom);
+  const setEditTaskValue = useSetAtom(editTaskAtom);
+  const setDisplayTaskFrom = useSetAtom(displayTaskFormAtom);
+
+  function handleOnClick() {
+    setEditTaskValue(task);
+    setDisplayTaskFrom(true);
+  }
 
   return (
     <Fragment>
       <Card
-        key={task.id}
-        sx={{ borderRadius: 2, maxWidth: 400, backgroundColor: color }}
+        sx={{
+          borderRadius: 2,
+          maxWidth: 400,
+          backgroundColor: cardBgColor,
+        }}
       >
-        <CardActionArea onClick={() => onClick(task)}>
+        <CardActionArea onClick={handleOnClick}>
           <CardContent sx={{ height: 400 }}>
-            <Typography variant="h4" noWrap borderBottom={1} gutterBottom paddingBottom={1}>
+            <Typography
+              variant="h4"
+              noWrap
+              borderBottom={1}
+              gutterBottom
+              paddingBottom={1}
+            >
               {task.title}
             </Typography>
-            <Box display="flex" alignItems="center" justifyContent="space-between">
+            <Box
+              display="flex"
+              alignItems="center"
+              justifyContent="space-between"
+            >
               <Typography>{task.status}</Typography>
               <Typography color="GrayText">
-                {task.createdAt.toLocaleDateString()}
+                {task.dueDate?.toLocaleDateString()}
               </Typography>
             </Box>
             <Typography
@@ -84,6 +101,7 @@ export default function TaskCard({
                   variant="outlined"
                   title="このタスクの作業を開始します"
                   onClick={async () => await startWork(task.id)}
+                  disabled={!attendanceState}
                 >
                   開始
                 </Button>
@@ -97,11 +115,7 @@ export default function TaskCard({
                   終了
                 </Button>
               )}
-              <Button
-                variant="outlined"
-                color="error"
-                onClick={() => setDisplayConfirmDelete(true)}
-              >
+              <Button variant="outlined" color="error">
                 削除
               </Button>
             </Stack>
@@ -118,18 +132,18 @@ export default function TaskCard({
                 onClick={() => handleClosePicker(task.id)}
               />
               <SketchPicker
-                color={color}
-                onChange={(color) => setColor(color.hex)}
+                color={cardBgColor}
+                onChange={(color) => setcardBgColor(color.hex)}
               />
             </Box>
           )}
         </CardActions>
       </Card>
-      <ConfirmDeleteItem
+      {/* <ConfirmDeleteItem
         open={displayConfirmDelete}
         handleClose={() => setDisplayConfirmDelete(false)}
         action={async () => deleteTask(task.id)}
-      />
+      /> */}
     </Fragment>
   );
 }

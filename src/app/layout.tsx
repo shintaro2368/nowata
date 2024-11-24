@@ -1,3 +1,4 @@
+import JotaiProvider from "@/jotai-provider";
 import theme from "@/theme";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
 import { ThemeProvider } from "@mui/material/styles";
@@ -21,7 +22,9 @@ export default function RootLayout({
     <html lang="ja">
       <body className={`${inter.className}`}>
         <AppRouterCacheProvider>
-          <ThemeProvider theme={theme}>{children}</ThemeProvider>
+          <ThemeProvider theme={theme}>
+            <JotaiProvider>{children}</JotaiProvider>
+          </ThemeProvider>
         </AppRouterCacheProvider>
       </body>
     </html>

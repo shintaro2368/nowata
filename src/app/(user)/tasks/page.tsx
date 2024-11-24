@@ -1,15 +1,19 @@
 import { auth } from "@/auth";
 import Tasks from "@/components/new/tasks";
 import prisma from "@/db";
-import TaskAndWorks from "@/types/task-and-works";
+import JotaiProvider from "@/jotai-provider";
 
 export default async function TasksPage() {
   const session = await auth();
-  const user = session?.user;
+  const userId = session?.user?.id;
+
+  if (!userId) {
+    throw new Error("ログインしてください");
+  }
   const project = await prisma.project.findUnique({
-    where: { selecterId: user?.id },
+    where: { selecterId: userId },
   });
-  const tasks: TaskAndWorks[] = await prisma.task.findMany({
+  const tasks = await prisma.task.findMany({
     where: { projectId: project?.id },
     orderBy: { createdAt: "desc" },
     include: {
@@ -18,8 +22,15 @@ export default async function TasksPage() {
           endAt: null,
         },
       },
+      SubTask: true,
     },
   });
 
-  return <Tasks tasks={tasks} />;
+  console.log(tasks);
+  return (
+    // アンマウント時に状態をリセットするようにするためProviderをかます
+    <JotaiProvider>
+      <Tasks tasks={tasks} />
+    </JotaiProvider>
+  );
 }

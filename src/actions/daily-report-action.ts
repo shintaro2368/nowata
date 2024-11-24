@@ -197,13 +197,11 @@ export async function update(pdfReports: PDFReport[]) {
   }
 
   const promises = pdfReports.map(async (pdfReoprt) => {
-    const { id, date, start, end, breakTime, description } = pdfReoprt;
-    const report = await prisma.dailyReport.findUnique({ where: { id } });
+    const { id, date, workStyle, start, end, breakTime, description } = pdfReoprt;
+    
 
-    if (!pdfReoprt.id && !report) {
-      throw new Error(
-        "一部のデータがすでに削除されています\nページを再読み込み後再度操作してください。"
-      );
+    if(!workStyle) {
+      throw new Error("勤務種別が空欄です。")
     }
 
     const startAt = fmtTimeToDate(date, start);
@@ -217,11 +215,13 @@ export async function update(pdfReports: PDFReport[]) {
     }
     const [breakTimeHour, breakTimeMinute] = fmtTimeToHourMinute(breakTime);
     if (pdfReoprt.id) {
+      // 編集
       await prisma.dailyReport.update({
         where: {
           id,
         },
         data: {
+          workStyle,
           startAt,
           endAt,
           breakTimeHour,
@@ -232,23 +232,24 @@ export async function update(pdfReports: PDFReport[]) {
         },
       });
     } else {
-      // await prisma.dailyReport.create({
-      //   data: {
-      //     userId,
-      //     date,
-      //     startAt,
-      //     endAt,
-      //     breakTimeHour,
-      //     breakTimeMinute,
-      //     description,
-      //     workTimeHour,
-      //     workTimeMinute
-      //   }
-      // })
+      await prisma.dailyReport.create({
+        data: {
+          userId,
+          date,
+          workStyle,
+          startAt,
+          endAt,
+          breakTimeHour,
+          breakTimeMinute,
+          description,
+          workTimeHour,
+          workTimeMinute,
+
+        }
+      })
     }
   });
 
   await Promise.all(promises);
-  console.log(promises.length);
   revalidatePath("/reports/common");
 }

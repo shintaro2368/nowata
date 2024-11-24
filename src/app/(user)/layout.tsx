@@ -1,7 +1,6 @@
 import { auth, signOut } from "@/auth";
-import LeaveButton from "@/components/leave-buton";
+import AttendanceForm from "@/components/attendance-form";
 import ProjectForm from "@/components/project-form";
-import CancelLeaveButton from "@/components/cancel-leave-button";
 import prisma from "@/db";
 import Link from "next/link";
 
@@ -48,10 +47,9 @@ export default async function DashboardLayout({
   const activeProject = await prisma.project.findUnique({
     where: { selecterId: user?.id },
   });
-
-  const attendance = await prisma.dailyReport.findFirst({
-    where: { userId: user.id, endAt: null },
-    orderBy: { startAt: "desc" },
+  const lastAttendance = await prisma.dailyReport.findFirst({
+    where: { userId: user.id },
+    orderBy: { createdAt: "desc" },
   });
 
   return (
@@ -123,7 +121,7 @@ export default async function DashboardLayout({
               description: project.description,
             }))}
           />
-          {attendance ? <LeaveButton /> : <CancelLeaveButton/>}
+          <AttendanceForm lastAttendance={lastAttendance} />
         </Box>
         <Box
           flexGrow={1}

@@ -1,18 +1,22 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { IMask, IMaskInput } from "react-imask";
-import React from "react";
-import { InputReport } from "./report-row";
 
+type TimeMaskProps = {
+  handleOnAccept: (value: string) => void;
+  value: string | undefined;
+  disabled: boolean;
+};
 
-type TimeMaskProps = {handleOnAccept: (value: string) => void, value: string | undefined, disabled: boolean};
-
-export default function TimeMask({value, handleOnAccept, disabled}: TimeMaskProps) {
-  const ref = useRef(null);
-  const inputRef = useRef(null);
-  const [isError, setIsError] = useState(false);
+export default function TimeMask({
+  value,
+  handleOnAccept,
+  disabled,
+}: TimeMaskProps) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   return (
     <IMaskInput
+      inputRef={inputRef}
       disabled={disabled}
       value={value}
       mask="HH:MM"
@@ -32,21 +36,19 @@ export default function TimeMask({value, handleOnAccept, disabled}: TimeMaskProp
           maxLength: 2,
         },
       }}
-      //ref={ref}
-      //inputRef={inputRef}
-      //overwrite
       className={`text-right w-full h-full bg-inherit`}
-      //onAccept={(e) => handleOnAccept(e)}
       onBlur={(e) => {
         const regex = /^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/;
-        const value = e.target.value;
-        if (value && !regex.test(value)) {
-          
-            setIsError(!isError);
-          
+        const targetValue = e.target.value;
+        if (targetValue && !regex.test(targetValue)) {
+          if (inputRef.current) {
+            inputRef.current.value = value ? value : "";
+          }
+          alert(
+            "時刻のフォーマットが異なります\nHH:mm (HHは00から23 mmは00から59)"
+          );
         } else {
-          //setIsError(!isError);
-          handleOnAccept(value);
+          handleOnAccept(targetValue);
         }
       }}
     />

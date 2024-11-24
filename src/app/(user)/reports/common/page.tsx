@@ -1,8 +1,9 @@
 import { auth } from "@/auth";
 import ReportList from "@/components/new/report-list";
+import ReportSearch from "@/components/new/report-search";
 import prisma from "@/db";
-import { dayOfWeeks, displayWorkStyle, PDFReport} from "@/lib/definitions";
-import { DailyReport } from "@prisma/client";
+import { dayOfWeeks, PDFReport, workStyleKeyValue } from "@/lib/definitions";
+import { DailyReport, WorkStyle } from "@prisma/client";
 import dayjs, { Dayjs } from "dayjs";
 import utc from "dayjs/plugin/utc";
 dayjs.extend(utc);
@@ -14,33 +15,52 @@ function fmtTime(hour: number, minutes: number): string {
   return `${hour < 10 ? "0" : ""}${hour}:${minutes < 10 ? "0" : ""}${minutes}`;
 }
 
-function createPDFReport(from: Dayjs, to: Dayjs, reports: DailyReport[]): PDFReport[] {
-  const pdfReports: PDFReport[] =[];
+function createPDFReport(
+  from: Dayjs,
+  to: Dayjs,
+  reports: DailyReport[]
+): PDFReport[] {
+  const pdfReports: PDFReport[] = [];
 
   const diff = to.diff(from, "day");
-  
-  for(let i = 0; i <= diff; i++) {
+
+  for (let i = 0; i <= diff; i++) {
     const targetDate = from.add(i, "day").add(9, "hour");
-    
-    const record = reports.find(report => report.date.toDateString() === targetDate.toDate().toDateString());
+
+    const record = reports.find(
+      (report) =>
+        report.date.toDateString() === targetDate.toDate().toDateString()
+    );
     // console.log(record);
     const id = record ? record.id : undefined;
     const date = targetDate.toDate();
     const day = `${targetDate.get("M") + 1}/${targetDate.get("D")}`;
     const dayOfWeek = dayOfWeeks[targetDate.day()];
-    const workStyle = record ? displayWorkStyle[record.workStyle] : undefined;
-    const start = record?.startAt ? dayjs(record.startAt).utc().format("HH:mm") : undefined;
-    const end = record?.endAt ? dayjs(record.endAt).utc().format("HH:mm") : undefined;
-    const breakTime = fmtTime(record ? record.breakTimeHour:0, record ? record.breakTimeMinute:0);
+    const workStyle = record ? record.workStyle : WorkStyle.DayOff;
+    const displayWorkStyle = workStyleKeyValue[workStyle];
+    const start = record?.startAt
+      ? dayjs(record.startAt).utc().format("HH:mm")
+      : undefined;
+    const end = record?.endAt
+      ? dayjs(record.endAt).utc().format("HH:mm")
+      : undefined;
+    const breakTime = fmtTime(
+      record ? record.breakTimeHour : 0,
+      record ? record.breakTimeMinute : 0
+    );
     const description = record?.description ? record.description : undefined;
-    const workTime = fmtTime(record ? record.workTimeHour : 0, record ? record.workTimeMinute : 0);
-  
+    const workTime = fmtTime(
+      record ? record.workTimeHour : 0,
+      record ? record.workTimeMinute : 0
+    );
+
     pdfReports.push({
       id,
       date,
       day,
       dayOfWeek,
       workStyle,
+      displayWorkStyle,
       start,
       end,
       breakTime,
@@ -72,7 +92,15 @@ export default async function ReportsCommon() {
     },
   });
 
-  
-  const pdfReports = createPDFReport(startOfCurrentMonth, endOfCurrentMonth, reports);
-  return <ReportList pdfReports={pdfReports} />;
+  const pdfReports = createPDFReport(
+    startOfCurrentMonth,
+    endOfCurrentMonth,
+    reports
+  );
+  return (
+    <>
+      <ReportSearch />
+      <ReportList pdfReports={pdfReports} />
+    </>
+  );
 }

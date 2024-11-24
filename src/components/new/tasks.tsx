@@ -1,45 +1,43 @@
 "use client";
 
+import { displayTaskFormAtom, taskInfosAtom, editTaskAtom } from "@/state";
 import Box from "@mui/material/Box";
-import { Task, Work } from "@prisma/client";
-import { useState } from "react";
+import Grid from "@mui/material/Grid";
+import { SubTask, Task, Work } from "@prisma/client";
+import { useAtomValue, useSetAtom } from "jotai";
+import { useEffect } from "react";
 import TaskForm from "./task-form";
 import TaskGrid from "./task-grid";
-import TaskAndWorks from "@/types/task-and-works";
-import Grid from "@mui/material/Grid"
 
-export default function Tasks({ tasks }: { tasks: TaskAndWorks []}) {
-  const [editTask, setEditTask] = useState<Task | null>(null);
-  const [displayForm, setDisplayForm] = useState(false);
+export default function Tasks({
+  tasks,
+}: {
+  tasks: (Task & { Work: Work[]; SubTask: SubTask[] })[];
+}) {
+  const displayTaskFormValue = useAtomValue(displayTaskFormAtom);
+  const setTaskInfosValue = useSetAtom(taskInfosAtom);
+  const setEidtTaskValue = useSetAtom(editTaskAtom);
 
-  const handleOpenForm = () => {
-    setEditTask(null);
-    setDisplayForm(true);
-  };
-
-  const handleCloseForm = () => {
-    setDisplayForm(false);
-  };
-
-  const handleSetEditTask = (task: Task) => {
-    setEditTask(task);
-    setDisplayForm(true)
-  }
+  useEffect(() => {
+    setTaskInfosValue([...tasks]);
+    setEidtTaskValue((prev) => {
+      if(prev) {
+        const newEditTaskValue = tasks.find(t => t.id === prev.id);
+        return newEditTaskValue ?? null;
+      }
+      return null;
+    })
+  }, [tasks]);
 
   return (
     <Grid container padding={2}>
       <Grid item xs={8}>
-        <TaskGrid
-          tasks={tasks}
-          handleOpenForm={handleOpenForm}
-          isOpenForm={displayForm}
-          handleSetEditTask={handleSetEditTask}
-        />
+        <TaskGrid />
       </Grid>
       <Grid item xs={4}>
-        {displayForm && (
+        {displayTaskFormValue && (
           <Box position="sticky" width="100%" left={0} top={0}>
-            <TaskForm task={editTask} handleCloseForm={handleCloseForm} />
+            <TaskForm />
           </Box>
         )}
       </Grid>

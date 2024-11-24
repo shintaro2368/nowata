@@ -31,6 +31,7 @@ export default function ReportList({
     } else {
       commits.current.push(pdfReport);
     }
+    console.log(commits.current)
   }
   return (
     <Box padding={2}>

@@ -1,37 +1,28 @@
 import TaskAndWorks from "@/types/task-and-works";
 import Container from "@mui/material/Container";
 import Grid from "@mui/material/Grid";
-import { Task } from "@prisma/client";
+import { SubTask, Task } from "@prisma/client";
 import TaskCard from "./task-card";
 import TaskNew from "./task-new";
+import { useAtomValue } from "jotai";
+import { taskInfosAtom } from "@/state";
 
-export default function TaskGrid({
-  tasks,
-  handleOpenForm,
-  isOpenForm,
-  handleSetEditTask,
-}: {
-  tasks: TaskAndWorks[];
-  handleOpenForm: () => void;
-  isOpenForm: boolean;
-  handleSetEditTask: (task: Task) => void;
-}) {
+export default function TaskGrid() {
+  const taskInfosValue = useAtomValue(taskInfosAtom);
+
   return (
     <Container>
       <Grid
         container
-        rowSpacing={2}
-        columnSpacing={2}
-        // maxWidth={1200}
-        //margin={4}
+        spacing={2}
       >
-        {tasks.map((task) => (
+        {taskInfosValue.map((task) => (
           <Grid item xs={4} key={task.id}>
-            <TaskCard task={task} onClick={handleSetEditTask} />
+            <TaskCard key={task.id} task={task}/>
           </Grid>
         ))}
         <Grid item xs={4}>
-          <TaskNew onClick={handleOpenForm} disable={isOpenForm} />
+          <TaskNew />
         </Grid>
       </Grid>
     </Container>

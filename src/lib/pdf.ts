@@ -2,7 +2,7 @@ import fontkit from "@pdf-lib/fontkit";
 import { PageSizes, PDFDocument, PDFFont, rgb } from "pdf-lib";
 import { PDFReport } from "./definitions";
 
-type omit = Omit<PDFReport, "id" | "date">;
+type omit = Omit<PDFReport, "id" | "date" | "workStyle">;
 
 const property = {
   padding: {
@@ -144,16 +144,16 @@ export default async function openPdf(pdfReports: PDFReport[]) {
     const omitedPdfReport: omit = {
       day: pdfReport.day,
       dayOfWeek: pdfReport.dayOfWeek,
-      workStyle: pdfReport.workStyle,
+      displayWorkStyle: pdfReport.displayWorkStyle,
       start: pdfReport.start,
       end: pdfReport.end,
       breakTime: pdfReport.breakTime,
       description: pdfReport.description,
       workTime: pdfReport.workTime,
     };
-    console.log(omitedPdfReport);
+    
     lineStart -= rowHeight;
-    if (pdfReport.workStyle === "休日") {
+    if (omitedPdfReport.displayWorkStyle === "休日") {
       page.drawRectangle({
         x: outerTableProps.x,
         y: lineStart,

@@ -1,4 +1,4 @@
-import { TaskStatus, WorkStyle } from "@prisma/client";
+import { TaskStatus, WorkStyle, Task, SubTask, Work } from "@prisma/client";
 
 export type TaskAndWorksQuery = {
   title?: string;
@@ -7,12 +7,22 @@ export type TaskAndWorksQuery = {
   to?: Date;
 };
 
+export type DisplayWorkStyle = "出勤" | "在宅勤務" | "欠勤" | "休日";
+
+export const workStyleKeyValue: { [key in WorkStyle]: DisplayWorkStyle } = {
+  AtCompany: "出勤",
+  AtHome: "在宅勤務",
+  Absent: "欠勤",
+  DayOff: "休日",
+};
+
 export type PDFReport = {
   id: string | undefined;
   date: Date;
   day: string;
   dayOfWeek: string;
-  workStyle: string | undefined;
+  workStyle: WorkStyle | undefined;
+  displayWorkStyle: DisplayWorkStyle | undefined;
   start: string | undefined;
   end: string | undefined;
   breakTime: string;
@@ -32,9 +42,4 @@ export type ReportForm = {
 
 export const dayOfWeeks: string[] = ["日", "月", "火", "水", "木", "金", "土"];
 
-export const displayWorkStyle: { [key in WorkStyle]: string } = {
-  AtCompany: "出勤",
-  AtHome: "在宅出勤",
-  Absent: "欠勤",
-  DayOff: "休日",
-};
+export type WideTask = (Task & {Work: Work[], SubTask: SubTask[]});

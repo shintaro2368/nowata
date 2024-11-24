@@ -2,71 +2,43 @@
 
 import { auth } from "@/auth";
 import prisma from "@/db";
-import parseFiledErros from "@/validation/parseValidationError";
-import { TaskStatus } from "@prisma/client";
+import { taskValidation } from "@/lib/validation";
+import { parseWithZod } from "@conform-to/zod";
+import dayjs from "dayjs";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
-// バリデーションを定義
-const validationSchema = z.object({
-  id: z.string().optional(),
-  title: z
-    .string()
-    .trim()
-    .min(1, "タイトルを入力してください")
-    .max(32, "32文字以内で入力してください"),
-  description: z
-    .string()
-    .trim()
-    .max(200, "200文字以内で入力してください")
-    .optional(),
-  status: z.nativeEnum(TaskStatus),
-});
 
-/**
- * Create a task.
- * @param prevState
- * @param formData
- * @returns
- */
-export async function createTask(prevState: any, formData: FormData) {
-  console.log(formData);
-  // ログイン済みかの確認
+export async function createTask(prevState: unknown, formData: FormData) {
   const session = await auth();
-  const user = session?.user;
-  if (!user) {
-    return {
-      message: "Unauthorized",
-      error: {},
-    };
+  const userId = session?.user?.id;
+  if (!userId) {
+    throw new Error("ログインをしてください");
   }
 
-  const validationFields = validationSchema.safeParse(
-    Object.fromEntries(formData)
-  );
+  const submission = await parseWithZod(formData, {
+    schema: taskValidation,
+    async: true,
+  });
 
-  if (!validationFields.success) {
-    const errors = {
-      error: parseFiledErros(validationFields.error),
-      message: "入力内容に誤りがあります。入力内容をご確認ください。",
-    };
-
-    console.warn("Task", errors);
-    return errors;
+  if (submission.status !== "success") {
+    return submission.reply();
   }
+
+  const { title, description, status, dueDate } = submission.value;
 
   // 選択中のプロジェクトが無ければエラーにする
   const project = await prisma.project.findUnique({
-    where: { selecterId: user.id },
+    where: { selecterId: userId },
   });
   if (!project) {
-    throw new Error("Project not found");
+    throw new Error("プロジェクトが選択されていません");
   }
-  const { title, description, status } = validationFields.data;
+
   await prisma.task.create({
     data: {
       title,
       description,
       status,
+      dueDate: dueDate ? dayjs(dueDate).add(9, "hour").toDate() : null,
       projectId: project.id,
     },
   });
@@ -74,40 +46,32 @@ export async function createTask(prevState: any, formData: FormData) {
   revalidatePath("/tasks");
 }
 
-export async function updateTask(prevState: any, formData: FormData) {
+export async function updateTask(prevState: unknown, formData: FormData) {
   const session = await auth();
-  const user = session?.user;
-  if (!user) {
-    return {
-      message: "Unauthorized",
-      error: {},
-    };
+  const userId = session?.user?.id;
+  if (!userId) {
+    throw new Error("ログインをしてください");
   }
 
-  const validationFields = validationSchema.safeParse(
-    Object.fromEntries(formData)
-  );
+  const submission = await parseWithZod(formData, {
+    schema: taskValidation,
+    async: true,
+  });
 
-  if (!validationFields.success) {
-    const errors = {
-      error: parseFiledErros(validationFields.error),
-      message: "入力内容に誤りがあります。入力内容をご確認ください。",
-    };
-
-    console.warn("Task", errors);
-    return errors;
+  if (submission.status !== "success") {
+    return submission.reply();
   }
 
   const project = await prisma.project.findUnique({
     where: {
-      selecterId: user.id,
+      selecterId: userId,
     },
   });
   if (!project) {
-    throw new Error("proejct not found");
+    throw new Error("プロジェクトが選択されていません");
   }
 
-  const { id, title, description, status } = validationFields.data;
+  const { id, title, description, status, dueDate } = submission.value;
   await prisma.task.update({
     where: {
       projectId: project.id,
@@ -117,6 +81,7 @@ export async function updateTask(prevState: any, formData: FormData) {
       title,
       description,
       status,
+      dueDate: dueDate ? dayjs(dueDate).add(9, "hour").toDate() : null,
     },
   });
 
@@ -126,17 +91,17 @@ export async function updateTask(prevState: any, formData: FormData) {
 export async function updateCardBgColor(taskId: string, cardBgColor: string) {
   // ログイン済みかの確認
   const session = await auth();
-  const user = session?.user;
-  if (!user?.id) {
-    return { message: "Unauthorized" };
+  const userId = session?.user?.id;
+  if (!userId) {
+    throw new Error("ログインをしてください");
   }
 
   // 選択中のプロジェクトがなければエラー
   const project = await prisma.project.findUnique({
-    where: { selecterId: user.id },
+    where: { selecterId: userId },
   });
   if (!project) {
-    throw new Error("Project not founed");
+    throw new Error("プロジェクトを選択してください");
   }
 
   await prisma.task.update({
@@ -150,27 +115,21 @@ export async function updateCardBgColor(taskId: string, cardBgColor: string) {
   });
 }
 
-/**
- * Delete a task that created by the user.
- * @param taskId
- * @returns
- */
 export async function deleteTask(taskId: string) {
   // ログイン済みかの確認
   const session = await auth();
-  const user = session?.user;
-  if (!user?.id) {
-    return { message: "Unauthorized" };
+  const userId = session?.user?.id;
+  if (userId) {
+    throw new Error("ログインをしてください");
   }
 
   // 選択中のプロジェクトがなければエラー
   const project = await prisma.project.findUnique({
-    where: { selecterId: user.id },
+    where: { selecterId: userId },
   });
   if (!project) {
-    throw new Error("Project not found");
+    throw new Error("プロジェクトを選択してください");
   }
-
   await prisma.task.delete({ where: { id: taskId, projectId: project.id } });
 
   revalidatePath("/tasks");
