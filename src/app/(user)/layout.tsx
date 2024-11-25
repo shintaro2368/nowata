@@ -1,10 +1,10 @@
 import { auth, signOut } from "@/auth";
 import AttendanceForm from "@/components/attendance-form";
+import { Nav, NavList } from "@/components/nav-list";
 import ProjectForm from "@/components/project-form";
 import prisma from "@/db";
 import Link from "next/link";
-
-import { Nav, NavList } from "@/components/nav-list";
+import { redirect } from "next/navigation";
 
 import BarChartIcon from "@mui/icons-material/BarChart";
 import DateRangeIcon from "@mui/icons-material/DateRange";
@@ -13,6 +13,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import TaskIcon from "@mui/icons-material/Task";
 import Box from "@mui/material/Box";
 import grey from "@mui/material/colors/grey";
+import dayjs from "dayjs";
 
 const navs: Nav[] = [
   { icon: BarChartIcon, title: "ダッシュボード", href: "/dashboard" },
@@ -52,6 +53,18 @@ export default async function DashboardLayout({
     orderBy: { createdAt: "desc" },
   });
 
+  // 勤務日と日付が異なっていたら出勤画面へリダイレクト
+  if (lastAttendance?.startAt && lastAttendance.endAt === null) {
+    if (!dayjs(lastAttendance.startAt).isSame(dayjs().add(9, "hour"), "D")) {
+      redirect("/attendance");
+    }
+  }
+
+  if (lastAttendance?.startAt && lastAttendance.endAt) {
+    if (!dayjs(lastAttendance.startAt).isSame(dayjs().add(9, "hour"), "D")) {
+      redirect("/attendance");
+    }
+  }
   return (
     <div className="flex h-screen overflow-hidden">
       <div className="w-72 flex-none">

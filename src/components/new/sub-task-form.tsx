@@ -1,4 +1,4 @@
-import { create } from "@/actions/subTask-action";
+import { create, doneSubTask } from "@/actions/subTask-action";
 import { subTaksValidation } from "@/lib/validation";
 import { editTaskAtom } from "@/state";
 import { useForm } from "@conform-to/react";
@@ -65,10 +65,21 @@ export default function SubTaskForm() {
               component="div"
               className="flex items-center border-b"
             >
-              <CheckBox defaultChecked={subTask.done} title="完了にする" />
+              <CheckBox
+                defaultChecked={subTask.done}
+                title="完了にする"
+                disabled={subTask.done}
+                onChange={async () => {
+                  await doneSubTask(subTask.id);
+                }}
+              />
               <Box>
-
-              <Typography align="left">{subTask.description}</Typography>
+                <Typography
+                  align="left"
+                  color={subTask.done ? "gray" : "inherit"}
+                >
+                  {subTask.description}
+                </Typography>
               </Box>
             </Box>
           ))}

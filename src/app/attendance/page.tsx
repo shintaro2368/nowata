@@ -14,7 +14,7 @@ export default async function Attendance() {
       orderBy: { date: "desc" },
     });
 
-    if (attendancedReport) redirect("/dashboard");
+    //if (attendancedReport) redirect("/dashboard");
   }
   return (
     <Box component="div" className="h-screen w-screen">

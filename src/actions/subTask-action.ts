@@ -45,4 +45,23 @@ export async function create(formState: unknown, formData: FormData) {
     },
   });
   revalidatePath("/tasks");
+  return submission.reply({ resetForm: true });
+}
+
+export async function doneSubTask(id: string) {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) {
+    throw new Error("ログインしてください");
+  }
+
+  await prisma.subTask.update({
+    where: {
+      id,
+      task: { project: { selecterId: userId } },
+    },
+    data: { done: true },
+  });
+
+  revalidatePath("/tasks");
 }

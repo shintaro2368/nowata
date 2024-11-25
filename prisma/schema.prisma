@@ -155,9 +155,11 @@ model Task {
 }
 
 model SubTask {
-  id          String  @id @default(cuid())
+  id          String   @id @default(cuid())
   description String?
-  done        Boolean @default(false)
+  done        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updateAt    DateTime @updatedAt
 
   taskId String
   task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)

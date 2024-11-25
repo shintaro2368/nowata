@@ -22,7 +22,9 @@ export default async function TasksPage() {
           endAt: null,
         },
       },
-      SubTask: true,
+      SubTask: {
+        orderBy: { createdAt: "desc" },
+      },
     },
   });
 

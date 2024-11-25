@@ -26,12 +26,16 @@ export async function attendance() {
   });
 
   const now = dayjs().add(9, "hour");
-  const today = dayjs().startOf("d").add(9, "hour");
+  const today = dayjs().startOf("D").add(9, "hour");
 
   if (notEndWork) {
-    // 型情報ではnullだが念のためnullまたはundefinedで評価
-    if (notEndWork.endAt == null) {
-      throw new Error("出勤するには退勤を行ってください");
+    if (!notEndWork.endAt) {
+      if (dayjs(notEndWork.startAt).isSame(today, "D")) {
+        throw new Error("出勤するには退勤を行ってください");
+      } else {
+        // 前日の23:59時点で退勤させる
+        await leave(dayjs().startOf("D").subtract(1, "minute").toDate());
+      }
     }
     if (dayjs(notEndWork.date).isSame(today)) {
       throw new Error(
@@ -53,7 +57,7 @@ export async function attendance() {
   redirect("/dashboard");
 }
 
-export async function leave(pathname: string) {
+export async function leave(at?: Date) {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) {
@@ -66,7 +70,7 @@ export async function leave(pathname: string) {
       where: {
         userId,
         endAt: null,
-        NOT: [{startAt: null}]
+        NOT: [{ startAt: null }],
       },
       orderBy: {
         startAt: "desc",
@@ -77,7 +81,9 @@ export async function leave(pathname: string) {
       throw new Error("退勤を行うには、出勤を行ってください");
     }
 
-    const now = dayjs().add(9, "hour").toDate();
+    const now = dayjs(at ?? new Date())
+      .add(9, "hour")
+      .toDate();
     // 退勤処理を行う
     // 出勤時刻と退勤時刻から勤務時間の計算を行う
     const diff = minutesBetween(latestWork.startAt!, now);
@@ -128,10 +134,10 @@ export async function leave(pathname: string) {
     }
   });
 
-  revalidatePath(pathname);
+  revalidatePath("/", "layout");
 }
 
-export async function cancelLeave(pathname: string) {
+export async function cancelLeave() {
   const session = await auth();
   const userId = session?.user?.id;
 
@@ -140,7 +146,7 @@ export async function cancelLeave(pathname: string) {
   }
 
   const lastReport = await prisma.dailyReport.findFirst({
-    where: { userId, NOT: [{startAt: null}] },
+    where: { userId, NOT: [{ startAt: null }] },
     orderBy: { createdAt: "desc" },
   });
 
@@ -160,7 +166,7 @@ export async function cancelLeave(pathname: string) {
     data: { endAt: null },
   });
 
-  revalidatePath(pathname);
+  revalidatePath("/", "layout");
 }
 
 function fmtTimeToDate(
@@ -197,11 +203,11 @@ export async function update(pdfReports: PDFReport[]) {
   }
 
   const promises = pdfReports.map(async (pdfReoprt) => {
-    const { id, date, workStyle, start, end, breakTime, description } = pdfReoprt;
-    
+    const { id, date, workStyle, start, end, breakTime, description } =
+      pdfReoprt;
 
-    if(!workStyle) {
-      throw new Error("勤務種別が空欄です。")
+    if (!workStyle) {
+      throw new Error("勤務種別が空欄です。");
     }
 
     const startAt = fmtTimeToDate(date, start);
@@ -244,9 +250,8 @@ export async function update(pdfReports: PDFReport[]) {
           description,
           workTimeHour,
           workTimeMinute,
-
-        }
-      })
+        },
+      });
     }
   });
 

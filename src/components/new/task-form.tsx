@@ -44,7 +44,9 @@ export default function TaskForm() {
   const [form, fields] = useForm({
     lastResult,
     onValidate({ formData }) {
-      return parseWithZod(formData, { schema: taskValidation });
+      const r = parseWithZod(formData, { schema: taskValidation });
+      console.warn(r);
+      return r;
     },
     shouldValidate: "onBlur",
     shouldRevalidate: "onInput",
